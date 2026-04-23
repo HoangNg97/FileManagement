@@ -72,6 +72,14 @@ public partial class QuickSearchWindow : Window
         OpenSelectedResult();
     }
 
+    private void ListBoxItem_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ListBoxItem item)
+        {
+            item.IsSelected = true;
+        }
+    }
+
     private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Escape)

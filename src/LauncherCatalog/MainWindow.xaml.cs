@@ -284,6 +284,14 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void ListBoxItem_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is ListBoxItem item)
+        {
+            item.IsSelected = true;
+        }
+    }
+
     private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject
     {
         while (source is not null)

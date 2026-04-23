@@ -81,6 +81,7 @@
                         <Setter Property="Margin" Value="0,0,0,8" />
                         <Setter Property="Background" Value="Transparent" />
                         <Setter Property="BorderThickness" Value="0" />
+                        <EventSetter Event="MouseEnter" Handler="ListBoxItem_MouseEnter" />
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="{x:Type ListBoxItem}">
@@ -95,7 +96,8 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Padding="12"
+                        <Border x:Name="ResultBorder"
+                                Padding="12"
                                 Background="{DynamicResource ControlMutedBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="1"
@@ -136,6 +138,12 @@
                                 </Border>
                             </Grid>
                         </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                <Setter TargetName="ResultBorder" Property="Background" Value="{DynamicResource SelectedItemBrush}" />
+                                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{DynamicResource SelectedItemBorderBrush}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
