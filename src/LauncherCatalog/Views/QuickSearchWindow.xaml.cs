@@ -9,8 +9,8 @@ namespace LauncherCatalog.Views;
 
 public partial class QuickSearchWindow : Window
 {
-    private const double SearchOnlyHeight = 112;
-    private const double ResultsHeight = 440;
+    private const double SearchOnlyWidth = 780;
+    private const double ResultsWidth = 920;
     private const int CatalogResultLimit = 8;
     private const int EverythingResultLimit = 8;
     private const int SearchDebounceMilliseconds = 160;
@@ -72,14 +72,6 @@ public partial class QuickSearchWindow : Window
         OpenSelectedResult();
     }
 
-    private void ListBoxItem_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
-    {
-        if (sender is System.Windows.Controls.ListBoxItem item)
-        {
-            item.IsSelected = true;
-        }
-    }
-
     private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
@@ -95,7 +87,7 @@ public partial class QuickSearchWindow : Window
 
     private void QueueRefreshResults(bool debounce)
     {
-        UpdateResultSurface(!string.IsNullOrWhiteSpace(SearchBox.Text));
+        UpdateResultSurface(!string.IsNullOrWhiteSpace(SearchBox.Text) && _results.Count > 0);
 
         _searchCts?.Cancel();
         _searchCts?.Dispose();
@@ -140,6 +132,7 @@ public partial class QuickSearchWindow : Window
 
             cancellationToken.ThrowIfCancellationRequested();
             ReplaceResults(results);
+            UpdateResultSurface(results.Count > 0);
         }
         catch (OperationCanceledException)
         {
@@ -179,7 +172,8 @@ public partial class QuickSearchWindow : Window
     private void UpdateResultSurface(bool hasQuery)
     {
         ResultsList.Visibility = hasQuery ? Visibility.Visible : Visibility.Collapsed;
-        Height = hasQuery ? ResultsHeight : SearchOnlyHeight;
+        Width = hasQuery ? ResultsWidth : SearchOnlyWidth;
+        PositionNearTopCenter();
     }
 
     private void OpenSelectedResult()
@@ -276,6 +270,7 @@ public partial class QuickSearchWindow : Window
         public EntryType Type { get; }
         public string DisplayName { get; }
         public string PrimaryPath { get; }
+        public string PrimaryPathPreview => PathPreviewFormatter.Truncate(PrimaryPath);
         public string SourceLabel { get; }
 
         public static QuickSearchResult FromCatalog(CatalogEntry entry)

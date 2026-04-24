@@ -284,12 +284,31 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void ListBoxItem_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    private void SearchBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        if (sender is ListBoxItem item)
+        if (e.Key is not (Key.Up or Key.Down))
         {
-            item.IsSelected = true;
+            return;
         }
+
+        var visibleEntries = _viewModel.EntriesView.Cast<CatalogEntry>().ToList();
+        if (visibleEntries.Count == 0)
+        {
+            return;
+        }
+
+        var currentIndex = _viewModel.SelectedEntry is null
+            ? -1
+            : visibleEntries.FindIndex(entry => entry.Id == _viewModel.SelectedEntry.Id);
+        var nextIndex = e.Key == Key.Down
+            ? Math.Min(currentIndex + 1, visibleEntries.Count - 1)
+            : currentIndex < 0
+                ? visibleEntries.Count - 1
+                : Math.Max(currentIndex - 1, 0);
+
+        _viewModel.SelectedEntry = visibleEntries[nextIndex];
+        EntriesList.ScrollIntoView(_viewModel.SelectedEntry);
+        e.Handled = true;
     }
 
     private static T? FindAncestor<T>(DependencyObject source) where T : DependencyObject

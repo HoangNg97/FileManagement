@@ -95,7 +95,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="{Binding FolderPath}"
+                                <TextBlock Text="{Binding FolderPathPreview}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            FontSize="12"
                                            FontWeight="SemiBold"
@@ -306,7 +306,8 @@
                                       Margin="0,0,10,0">
                                     <TextBox x:Name="SearchBox"
                                              Style="{StaticResource SearchTextBoxStyle}"
-                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             PreviewKeyDown="SearchBox_PreviewKeyDown" />
                                     <TextBlock Text="Search apps, folders, paths, tags, notes"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                Margin="4,0,0,0"
@@ -345,7 +346,8 @@
                                   HorizontalScrollBarVisibility="Disabled"
                                   Padding="0,0,12,0">
                         <StackPanel>
-                            <ListBox Style="{StaticResource SmoothCatalogListBoxStyle}"
+                            <ListBox x:Name="EntriesList"
+                                     Style="{StaticResource SmoothCatalogListBoxStyle}"
                                      ItemsSource="{Binding EntriesView}"
                                      SelectedItem="{Binding SelectedEntry}"
                                      MouseDoubleClick="EntriesList_MouseDoubleClick"
@@ -359,7 +361,6 @@
                                         <Setter Property="Padding" Value="0" />
                                         <Setter Property="Background" Value="Transparent" />
                                         <Setter Property="BorderThickness" Value="0" />
-                                        <EventSetter Event="MouseEnter" Handler="ListBoxItem_MouseEnter" />
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="{x:Type ListBoxItem}">
@@ -528,7 +529,6 @@
                                         <Setter Property="Padding" Value="0" />
                                         <Setter Property="Background" Value="Transparent" />
                                         <Setter Property="BorderThickness" Value="0" />
-                                        <EventSetter Event="MouseEnter" Handler="ListBoxItem_MouseEnter" />
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="{x:Type ListBoxItem}">
@@ -539,34 +539,33 @@
                                     </Style>
                                 </ListBox.ItemContainerStyle>
                             </ListBox>
+
+                            <Border Margin="2,4,14,8"
+                                    Padding="24"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Visibility="{Binding ShowEverythingInfoState, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="&#xE721;"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="26"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="{Binding EverythingInfoTitle}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"
+                                               TextAlignment="Center"
+                                               Margin="0,12,0,4" />
+                                    <TextBlock Text="{Binding EverythingInfoMessage}"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
-
-                    <Border Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="12"
-                            Padding="28"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding ShowEverythingInfoState, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <StackPanel Width="360">
-                            <TextBlock Text="&#xE721;"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       FontSize="30"
-                                       Foreground="{DynamicResource AccentBrush}"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding EverythingStatusText}"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       TextAlignment="Center"
-                                       Margin="0,12,0,4" />
-                            <TextBlock Text="Catalog search is still available. Embedded Everything results require the command-line query tool."
-                                       Foreground="{DynamicResource MutedTextBrush}"
-                                       TextAlignment="Center"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Border>
 
                     <Border Background="{DynamicResource SurfaceBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"

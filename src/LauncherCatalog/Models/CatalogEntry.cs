@@ -144,6 +144,8 @@ public sealed class CatalogEntry : INotifyPropertyChanged
 
     public string TypeLabel => Type == EntryType.App ? "App" : "Folder";
     public string PrimaryPath => Type == EntryType.App ? ExePath ?? string.Empty : FolderPath;
+    public string PrimaryPathPreview => PathPreviewFormatter.Truncate(PrimaryPath);
+    public string FolderPathPreview => PathPreviewFormatter.Truncate(FolderPath);
     public string TagsText => Tags.Count == 0 ? "No tags" : string.Join(", ", Tags);
     public string LastOpenedText => LastOpened?.ToString("MMM d, yyyy h:mm tt") ?? "Never";
     public string DateAddedText => DateAdded.ToString("MMM d, yyyy h:mm tt");
@@ -190,6 +192,8 @@ public sealed class CatalogEntry : INotifyPropertyChanged
     {
         OnPropertyChanged(nameof(TypeLabel));
         OnPropertyChanged(nameof(PrimaryPath));
+        OnPropertyChanged(nameof(PrimaryPathPreview));
+        OnPropertyChanged(nameof(FolderPathPreview));
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

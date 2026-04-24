@@ -12,6 +12,8 @@ public sealed class EverythingResult
     public string DisplayName => IsFolder ? FolderName : Path.GetFileNameWithoutExtension(FullPath);
     public string FileName => IsFolder ? string.Empty : Path.GetFileName(FullPath);
     public string FolderPath => IsFolder ? FullPath : Path.GetDirectoryName(FullPath) ?? string.Empty;
+    public string FullPathPreview => PathPreviewFormatter.Truncate(FullPath);
+    public string FolderPathPreview => PathPreviewFormatter.Truncate(FolderPath);
     public string FolderName => GetFolderName(FolderPath);
     public string TypeLabel => IsFolder ? "Everything folder" : "Everything file";
     public string SavedStatusText => IsSaved ? "Saved" : "Everything";

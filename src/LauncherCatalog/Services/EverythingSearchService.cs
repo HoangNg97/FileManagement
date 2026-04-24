@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using LauncherCatalog.Models;
 
 namespace LauncherCatalog.Services;
@@ -23,11 +24,61 @@ public sealed class EverythingSearchService
         CancellationToken cancellationToken = default)
     {
         var queryExecutablePath = GetQueryExecutablePath(includePath: true);
-        if (string.IsNullOrWhiteSpace(queryExecutablePath) || string.IsNullOrWhiteSpace(query))
+        var trimmedQuery = query?.Trim();
+        if (string.IsNullOrWhiteSpace(queryExecutablePath) || string.IsNullOrWhiteSpace(trimmedQuery))
         {
             return [];
         }
 
+        var results = new List<EverythingResult>();
+        var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var queryVariant in BuildQueryVariants(trimmedQuery))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var remainingSlots = DefaultResultLimit - results.Count;
+            if (remainingSlots <= 0)
+            {
+                break;
+            }
+
+            var variantResults = await SearchVariantAsync(
+                queryExecutablePath,
+                queryVariant,
+                remainingSlots,
+                cancellationToken);
+
+            foreach (var path in variantResults)
+            {
+                if (!seenPaths.Add(path))
+                {
+                    continue;
+                }
+
+                results.Add(new EverythingResult
+                {
+                    FullPath = path,
+                    IsFolder = Directory.Exists(path),
+                    IsSaved = savedPaths.Contains(NormalizePath(path))
+                });
+
+                if (results.Count >= DefaultResultLimit)
+                {
+                    break;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private static async Task<IReadOnlyList<string>> SearchVariantAsync(
+        string queryExecutablePath,
+        string query,
+        int limit,
+        CancellationToken cancellationToken)
+    {
         using var process = new Process();
         process.StartInfo = new ProcessStartInfo
         {
@@ -38,10 +89,10 @@ public sealed class EverythingSearchService
             CreateNoWindow = true
         };
         process.StartInfo.ArgumentList.Add("-n");
-        process.StartInfo.ArgumentList.Add(DefaultResultLimit.ToString());
-        process.StartInfo.ArgumentList.Add(query.Trim());
+        process.StartInfo.ArgumentList.Add(limit.ToString());
+        process.StartInfo.ArgumentList.Add(query);
 
-        var results = new List<EverythingResult>();
+        var results = new List<string>();
 
         try
         {
@@ -56,13 +107,7 @@ public sealed class EverythingSearchService
                     continue;
                 }
 
-                var path = line.Trim();
-                results.Add(new EverythingResult
-                {
-                    FullPath = path,
-                    IsFolder = Directory.Exists(path),
-                    IsSaved = savedPaths.Contains(NormalizePath(path))
-                });
+                results.Add(line.Trim());
             }
 
             await process.WaitForExitAsync(cancellationToken);
@@ -108,6 +153,88 @@ public sealed class EverythingSearchService
         {
             // The process may have exited between cancellation and kill.
         }
+    }
+
+    private static IReadOnlyList<string> BuildQueryVariants(string query)
+    {
+        var variants = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void AddVariant(string? candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                return;
+            }
+
+            var trimmed = candidate.Trim();
+            if (seen.Add(trimmed))
+            {
+                variants.Add(trimmed);
+            }
+        }
+
+        AddVariant(query);
+
+        var collapsed = CollapseSearchText(query);
+        AddVariant(collapsed);
+
+        foreach (var value in new[] { query, collapsed })
+        {
+            var segments = SplitQuerySegments(value);
+            if (segments.Count <= 1)
+            {
+                continue;
+            }
+
+            AddVariant(string.Join(" ", segments));
+            AddVariant(string.Join("*", segments));
+        }
+
+        return variants;
+    }
+
+    private static List<string> SplitQuerySegments(string value)
+    {
+        var normalized = CollapseSearchText(value);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return [];
+        }
+
+        var segments = new List<string>();
+        var currentSegment = new StringBuilder();
+
+        for (var index = 0; index < normalized.Length; index++)
+        {
+            var currentCharacter = normalized[index];
+
+            if (currentSegment.Length > 0 && StartsNewSegment(currentSegment[^1], currentCharacter))
+            {
+                segments.Add(currentSegment.ToString());
+                currentSegment.Clear();
+            }
+
+            currentSegment.Append(currentCharacter);
+        }
+
+        if (currentSegment.Length > 0)
+        {
+            segments.Add(currentSegment.ToString());
+        }
+
+        return segments;
+    }
+
+    private static bool StartsNewSegment(char previousCharacter, char currentCharacter)
+    {
+        return char.IsLetter(previousCharacter) != char.IsLetter(currentCharacter)
+            || char.IsDigit(previousCharacter) != char.IsDigit(currentCharacter);
+    }
+
+    private static string CollapseSearchText(string value)
+    {
+        return new string(value.Where(char.IsLetterOrDigit).ToArray());
     }
 
     private string? GetQueryExecutablePath(bool includePath)

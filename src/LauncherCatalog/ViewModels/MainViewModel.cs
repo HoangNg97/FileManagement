@@ -203,6 +203,16 @@ public sealed class MainViewModel : ObservableObject
     public bool ShowEverythingInfoState => SelectedSearchSource != SearchSourceMode.Catalog
         && !HasEverythingResults
         && !string.IsNullOrWhiteSpace(SearchText);
+    public string EverythingInfoTitle => _everythingSearchService.IsAvailable
+        ? "No Everything results"
+        : _everythingSearchService.IsAppInstalled
+            ? "Everything found, es.exe needed"
+            : "Everything unavailable";
+    public string EverythingInfoMessage => _everythingSearchService.IsAvailable
+        ? "No filesystem matches were found for this search."
+        : _everythingSearchService.IsAppInstalled
+            ? "Catalog search still works. Embedded Everything results require the command-line query tool, es.exe."
+            : "Catalog search still works. Install Everything and es.exe to include filesystem matches here.";
     public bool ShowEmptyCatalogState => HasNoEntries && ShowCatalogResults;
     public string EverythingStatusText => _everythingSearchService.IsAvailable
         ? "Everything results"
@@ -824,6 +834,8 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowEverythingOnlyResults));
         OnPropertyChanged(nameof(ShowBothEverythingResults));
         OnPropertyChanged(nameof(ShowEverythingInfoState));
+        OnPropertyChanged(nameof(EverythingInfoTitle));
+        OnPropertyChanged(nameof(EverythingInfoMessage));
         OnPropertyChanged(nameof(ShowEmptyCatalogState));
         OnPropertyChanged(nameof(EverythingStatusText));
     }
