@@ -13,9 +13,26 @@
 
   <ItemGroup>
     <Resource Include="Assets\catalog_icon.ico" />
+    <Resource Include="..\..\gemini_icon.ico" Link="Assets\gemini_icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="client_secret.json" />
+    <EmbeddedResource Include="..\..\Everything\Runtime\Everything64.dll" Link="Embedded\Everything64.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Everything\Runtime\Everything.exe" Link="Everything.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Everything\Runtime\Everything.lng" Link="Everything.lng">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
   </ItemGroup>
 </Project>

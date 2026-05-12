@@ -41,6 +41,16 @@ public partial class HotkeySettingsDialog : Window
         Close();
     }
 
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DragMove();
+    }
+
+    private void TitleClose_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
     private void UpdateShortcutText()
     {
         ShortcutText.Text = HotkeyText;

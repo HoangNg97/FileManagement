@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using LauncherCatalog.Models;
 using LauncherCatalog.Services;
 using LauncherCatalog.ViewModels;
@@ -51,6 +52,16 @@ public partial class EntryEditorDialog : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        DialogResult = false;
+    }
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DragMove();
+    }
+
+    private void TitleClose_Click(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
     }

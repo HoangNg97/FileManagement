@@ -2,14 +2,25 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:LauncherCatalog.Converters"
+        xmlns:models="clr-namespace:LauncherCatalog.Models"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="Launcher Catalog"
         Width="1180"
         Height="760"
         MinWidth="980"
         MinHeight="620"
+        WindowStyle="None"
+        ResizeMode="CanResize"
         Icon="Assets/catalog_icon.ico"
         Background="{DynamicResource PageBrush}"
         WindowStartupLocation="CenterScreen">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="44"
+                            CornerRadius="0"
+                            GlassFrameThickness="0"
+                            ResizeBorderThickness="6"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
     <Window.Resources>
         <conv:EntryTypeToGlyphConverter x:Key="EntryTypeToGlyphConverter" />
         <conv:FavoriteGlyphConverter x:Key="FavoriteGlyphConverter" />
@@ -25,6 +36,44 @@
             <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
 
+        <Style x:Key="AskGeminiTitleButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="MinWidth" Value="124" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Background" Value="#FFFFFFFF" />
+            <Setter Property="Foreground" Value="#FF111111" />
+            <Setter Property="BorderBrush" Value="#FFD6D6D6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FFF4F4F4" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#FFEAEAEA" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="BadgeTextStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -34,9 +83,9 @@
         <DataTemplate x:Key="CenteredDropdownTextTemplate">
             <TextBlock Text="{Binding}"
                        Foreground="{DynamicResource StrongTextBrush}"
-                       HorizontalAlignment="Center"
+                       HorizontalAlignment="Left"
                        VerticalAlignment="Center"
-                       TextAlignment="Center" />
+                       TextAlignment="Left" />
         </DataTemplate>
 
         <DataTemplate x:Key="EverythingResultTemplate">
@@ -178,16 +227,253 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="MainTabControlStyle" TargetType="{x:Type TabControl}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabControl}">
+                        <Grid KeyboardNavigation.TabNavigation="Local">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="0,0,0,8">
+                                <TabPanel x:Name="HeaderPanel"
+                                          Margin="0"
+                                          IsItemsHost="True"
+                                          Background="Transparent"
+                                          KeyboardNavigation.TabIndex="1" />
+                            </Border>
+
+                            <ContentPresenter x:Name="PART_SelectedContentHost"
+                                              Grid.Row="1"
+                                              Margin="0"
+                                              ContentSource="SelectedContent" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MainTabItemStyle" TargetType="{x:Type TabItem}">
+            <Setter Property="Padding" Value="14,8,14,10" />
+            <Setter Property="Margin" Value="0,0,20,0" />
+            <Setter Property="MinWidth" Value="96" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="3" />
+                            </Grid.RowDefinitions>
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ContentSource="Header"
+                                              Margin="{TemplateBinding Padding}" />
+                            <Border x:Name="ActiveLine"
+                                    Grid.Row="1"
+                                    Background="Transparent"
+                                    CornerRadius="2"
+                                    Margin="0,2,0,0" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="ActiveLine" Property="Background" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TaskStatusBadgeBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="#FFEFF6FF" />
+            <Setter Property="BorderBrush" Value="#FFBFDBFE" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:TaskStatus.Todo}">
+                    <Setter Property="Background" Value="#FFFEECEC" />
+                    <Setter Property="BorderBrush" Value="#FFFCCACA" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:TaskStatus.Ongoing}">
+                    <Setter Property="Background" Value="#FFEDFDF3" />
+                    <Setter Property="BorderBrush" Value="#FFA7F3D0" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:TaskStatus.Done}">
+                    <Setter Property="Background" Value="#FFEFF6FF" />
+                    <Setter Property="BorderBrush" Value="#FFBFDBFE" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="TaskStatusBadgeTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="#FF1D4ED8" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:TaskStatus.Todo}">
+                    <Setter Property="Foreground" Value="#FFB42318" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:TaskStatus.Ongoing}">
+                    <Setter Property="Foreground" Value="#FF087443" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static models:TaskStatus.Done}">
+                    <Setter Property="Foreground" Value="#FF1D4ED8" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="TaskPriorityStripeStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="Transparent" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Priority}" Value="{x:Static models:TaskPriority.Normal}">
+                    <Setter Property="Background" Value="#FF94A3B8" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Priority}" Value="{x:Static models:TaskPriority.Urgent}">
+                    <Setter Property="Background" Value="#FFDC2626" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="TaskInlineTextToggleStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <ContentPresenter Margin="{TemplateBinding Padding}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TaskInlineDateFieldStyle" TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource TaskInlineTextToggleStyle}">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="FieldBorder"
+                                Background="{DynamicResource ControlBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8,4">
+                            <ContentPresenter HorizontalAlignment="Left"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="FieldBorder" Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="FieldBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CompactTaskActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+
     </Window.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="0">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="16" />
+            <RowDefinition Height="44" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="12" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Background="#AA5C4B3E"
+                BorderBrush="#806F5A4A"
+                BorderThickness="0,0,0,1"
+                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+            <Grid MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="12,0,0,0">
+                    <TextBlock Text="Launcher Catalog"
+                               Foreground="#FFF4EDE6"
+                               FontWeight="SemiBold"
+                               FontSize="13" />
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <ToggleButton Style="{StaticResource SwitchButtonStyle}"
+                                  IsChecked="{Binding IsDarkMode, Mode=TwoWay}"
+                                  Margin="0,0,10,0"
+                                  ToolTip="Toggle dark mode"
+                                  shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button Width="46"
+                            Height="44"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FFF4EDE6"
+                            FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE921;"
+                            Click="Minimize_Click"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button Width="46"
+                            Height="44"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FFF4EDE6"
+                            FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE922;"
+                            Click="MaxRestore_Click"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button Width="50"
+                            Height="44"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#FFF4EDE6"
+                            FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE8BB;"
+                            Click="Close_Click"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="24">
+        <TabControl
+                    Style="{StaticResource MainTabControlStyle}">
+            <TabControl.Resources>
+                <Style TargetType="{x:Type TabItem}" BasedOn="{StaticResource MainTabItemStyle}" />
+            </TabControl.Resources>
+            <TabItem Header="Catalog">
+                <Grid Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
         <Grid>
             <Grid.ColumnDefinitions>
@@ -207,10 +493,6 @@
             <StackPanel Grid.Column="1"
                         Orientation="Horizontal"
                         VerticalAlignment="Center">
-                <ToggleButton Style="{StaticResource SwitchButtonStyle}"
-                              IsChecked="{Binding IsDarkMode, Mode=TwoWay}"
-                              Margin="0,0,10,0"
-                              ToolTip="Toggle dark mode" />
                 <Button Style="{StaticResource IconButtonStyle}"
                         Content="&#xE765;"
                         Click="ShortcutSettings_Click"
@@ -277,11 +559,11 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" MaxWidth="430" />
                             <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="108" />
-                            <ColumnDefinition Width="10" />
-                            <ColumnDefinition Width="88" />
+                            <ColumnDefinition Width="132" />
                             <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="112" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="132" />
                             <ColumnDefinition Width="10" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
@@ -321,18 +603,15 @@
                         <ComboBox Grid.Column="2"
                                   ItemsSource="{Binding SearchSources}"
                                   SelectedItem="{Binding SelectedSearchSource}"
-                                  ItemTemplate="{StaticResource CenteredDropdownTextTemplate}"
-                                  HorizontalContentAlignment="Center" />
+                                  ItemTemplate="{StaticResource CenteredDropdownTextTemplate}" />
                         <ComboBox Grid.Column="4"
                                   ItemsSource="{Binding Filters}"
                                   SelectedItem="{Binding SelectedFilter}"
-                                  ItemTemplate="{StaticResource CenteredDropdownTextTemplate}"
-                                  HorizontalContentAlignment="Center" />
+                                  ItemTemplate="{StaticResource CenteredDropdownTextTemplate}" />
                         <ComboBox Grid.Column="6"
                                   ItemsSource="{Binding SortModes}"
                                   SelectedItem="{Binding SelectedSort}"
-                                  ItemTemplate="{StaticResource CenteredDropdownTextTemplate}"
-                                  HorizontalContentAlignment="Center" />
+                                  ItemTemplate="{StaticResource CenteredDropdownTextTemplate}" />
                         <Button Grid.Column="8"
                                 Style="{StaticResource IconButtonStyle}"
                                 Content="&#xE72C;"
@@ -344,7 +623,7 @@
                 <Grid Grid.Row="2">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
-                                  Padding="0,0,12,0">
+                                  Padding="0,0,18,0">
                         <StackPanel>
                             <ListBox x:Name="EntriesList"
                                      Style="{StaticResource SmoothCatalogListBoxStyle}"
@@ -357,7 +636,7 @@
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="{x:Type ListBoxItem}">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="Margin" Value="0,0,0,10" />
+                                        <Setter Property="Margin" Value="0,0,14,10" />
                                         <Setter Property="Padding" Value="0" />
                                         <Setter Property="Background" Value="Transparent" />
                                         <Setter Property="BorderThickness" Value="0" />
@@ -525,7 +804,7 @@
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="{x:Type ListBoxItem}">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="Margin" Value="0,0,0,10" />
+                                        <Setter Property="Margin" Value="0,0,14,10" />
                                         <Setter Property="Padding" Value="0" />
                                         <Setter Property="Background" Value="Transparent" />
                                         <Setter Property="BorderThickness" Value="0" />
@@ -764,17 +1043,652 @@
             </Grid>
         </Grid>
 
-        <DockPanel Grid.Row="4"
-                   LastChildFill="True">
-            <TextBlock Text="{Binding StatusMessage}"
-                       Foreground="{DynamicResource MutedTextBrush}" />
-            <TextBlock Text="{Binding StoragePath}"
-                       Foreground="{DynamicResource MutedTextBrush}"
-                       TextAlignment="Right"
-                       ToolTip="{Binding StoragePath}" />
-        </DockPanel>
+                <DockPanel Grid.Row="4"
+                           LastChildFill="True">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                    <TextBlock Text="{Binding StoragePath}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextAlignment="Right"
+                               ToolTip="{Binding StoragePath}" />
+                </DockPanel>
+            </Grid>
+            </TabItem>
+            <TabItem Header="Tasks">
+                <Grid Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="14" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Border Grid.RowSpan="3"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12" />
 
-        <Grid Grid.RowSpan="5"
+                    <DockPanel Margin="18,14,18,0"
+                               LastChildFill="False">
+                        <StackPanel Orientation="Horizontal"
+                                    DockPanel.Dock="Left">
+                            <ComboBox Width="164"
+                                      Margin="0,0,10,0"
+                                      SelectedIndex="0">
+                                <ComboBoxItem Content="Priority: All" />
+                                <ComboBoxItem Content="Priority: High" />
+                                <ComboBoxItem Content="Priority: Medium" />
+                                <ComboBoxItem Content="Priority: Low" />
+                            </ComboBox>
+                            <ComboBox Width="180"
+                                      Margin="0,0,10,0"
+                                      SelectedIndex="0">
+                                <ComboBoxItem Content="Due Date: All" />
+                                <ComboBoxItem Content="Due: This week" />
+                                <ComboBoxItem Content="Due: This month" />
+                                <ComboBoxItem Content="Overdue" />
+                            </ComboBox>
+                            <ComboBox Width="164"
+                                      SelectedIndex="0">
+                                <ComboBoxItem Content="Status: All" />
+                                <ComboBoxItem Content="Not Started" />
+                                <ComboBoxItem Content="In Progress" />
+                                <ComboBoxItem Content="Needs Review" />
+                                <ComboBoxItem Content="Completed" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                MinWidth="160"
+                                Content="Create New Task"
+                                Command="{Binding CreateTaskCommand}" />
+                    </DockPanel>
+
+                    <Border Grid.Row="2"
+                            Margin="18,0,18,18"
+                            Background="{DynamicResource ControlMutedBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="16,14,16,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="6" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="3.25*" />
+                                    <ColumnDefinition Width="1.35*" />
+                                    <ColumnDefinition Width="1.25*" />
+                                    <ColumnDefinition Width="2.15*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="2"
+                                           Text="Task"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="3"
+                                           Text="Due Date"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="4"
+                                           Text="Status"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="5"
+                                           Text="Action"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           FontWeight="SemiBold" />
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="1"
+                                          Margin="10,0,10,10"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding Tasks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Tag="TaskRowRoot"
+                                                    Margin="0,0,0,8"
+                                                    Padding="10"
+                                                    Background="{DynamicResource SurfaceBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="6" />
+                                                        <ColumnDefinition Width="10" />
+                                                        <ColumnDefinition Width="3.25*" />
+                                                        <ColumnDefinition Width="1.35*" />
+                                                        <ColumnDefinition Width="1.25*" />
+                                                        <ColumnDefinition Width="2.15*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Style="{StaticResource TaskPriorityStripeStyle}"
+                                                            CornerRadius="3" />
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding Title}"
+                                                               FontWeight="SemiBold"
+                                                               VerticalAlignment="Center" />
+
+                                                    <Grid Grid.Column="3"
+                                                          VerticalAlignment="Center">
+                                                        <ToggleButton x:Name="DueDateToggle"
+                                                                      Style="{StaticResource TaskInlineDateFieldStyle}">
+                                                            <TextBlock Text="{Binding DueDateText}"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextWrapping="NoWrap" />
+                                                        </ToggleButton>
+                                                        <Popup IsOpen="{Binding IsChecked, ElementName=DueDateToggle, Mode=TwoWay}"
+                                                               PlacementTarget="{Binding ElementName=DueDateToggle}"
+                                                               Placement="Bottom"
+                                                               StaysOpen="False"
+                                                               AllowsTransparency="True"
+                                                               PopupAnimation="Fade">
+                                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="16"
+                                                                    Padding="8">
+                                                                <Calendar Style="{StaticResource MaterialDesignCalendarPortrait}"
+                                                                          SelectedDate="{Binding DueDate, Mode=OneWay}"
+                                                                          SelectedDatesChanged="TaskDueDateCalendar_SelectedDatesChanged" />
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
+
+                                                    <Grid Grid.Column="4"
+                                                          VerticalAlignment="Center">
+                                                        <ToggleButton x:Name="StatusToggle"
+                                                                      Style="{StaticResource TaskInlineTextToggleStyle}">
+                                                            <Border Style="{StaticResource TaskStatusBadgeBorderStyle}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="6"
+                                                                    Padding="10,4"
+                                                                    HorizontalAlignment="Left"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding StatusText}"
+                                                                           Style="{StaticResource TaskStatusBadgeTextStyle}"
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="12" />
+                                                            </Border>
+                                                        </ToggleButton>
+                                                        <Popup IsOpen="{Binding IsChecked, ElementName=StatusToggle, Mode=TwoWay}"
+                                                               PlacementTarget="{Binding ElementName=StatusToggle}"
+                                                               Placement="Bottom"
+                                                               StaysOpen="False"
+                                                               AllowsTransparency="True"
+                                                               PopupAnimation="Fade">
+                                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="10"
+                                                                    Padding="8">
+                                                                <StackPanel>
+                                                                    <Button Content="Todo"
+                                                                            Tag="Todo"
+                                                                            Click="TaskStatusOption_Click"
+                                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                                            Margin="0,0,0,6" />
+                                                                    <Button Content="On-going"
+                                                                            Tag="Ongoing"
+                                                                            Click="TaskStatusOption_Click"
+                                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                                            Margin="0,0,0,6" />
+                                                                    <Button Content="Done"
+                                                                            Tag="Done"
+                                                                            Click="TaskStatusOption_Click"
+                                                                            Style="{StaticResource SecondaryButtonStyle}" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
+
+                                                    <StackPanel Grid.Column="5"
+                                                                Orientation="Horizontal"
+                                                                VerticalAlignment="Center">
+                                                        <Button Style="{StaticResource CompactTaskActionButtonStyle}"
+                                                                Content="Mark as Completed"
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Center"
+                                                                Click="RemoveTask_Click" />
+                                                        <Button Margin="8,0,0,0"
+                                                                Style="{StaticResource IconButtonStyle}"
+                                                                Content="&#xE70F;"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip="Edit task"
+                                                                Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" />
+                                                        <Button Margin="8,0,0,0"
+                                                                Style="{StaticResource IconButtonStyle}"
+                                                                Content="{Binding NotificationIcon}"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip="{Binding NotificationToolTip}"
+                                                                Opacity="{Binding NotificationsEnabled, Converter={StaticResource FavoriteOpacityConverter}, ConverterParameter=1}"
+                                                                Command="{Binding DataContext.ToggleTaskNotificationsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Note">
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="320" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="18">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="12" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="12" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="Notes"
+                                           FontSize="24"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding NoteResultCountText}"
+                                           Margin="0,4,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+
+                            <Grid Grid.Row="2">
+                                <TextBox Text="{Binding NoteSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Search note title, content, or tags" />
+                                <TextBlock Margin="14,0,42,0"
+                                           Text="Search notes by title, content, or tags"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           Visibility="{Binding NoteSearchText, Converter={StaticResource SearchPlaceholderConverter}}" />
+                            </Grid>
+
+                            <Grid Grid.Row="4">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Width="150"
+                                              ItemsSource="{Binding NoteFilters}"
+                                              ItemTemplate="{StaticResource CenteredDropdownTextTemplate}"
+                                              SelectedItem="{Binding SelectedNoteFilter}" />
+                                    <Button Grid.Column="2"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Content="New Note"
+                                            Height="34"
+                                            MinWidth="104"
+                                            Padding="14,4"
+                                            FontSize="13"
+                                            Command="{Binding CreateNoteCommand}" />
+                                </Grid>
+
+                                <ListBox Grid.Row="2"
+                                         Style="{StaticResource SmoothCatalogListBoxStyle}"
+                                         ItemsSource="{Binding NotesView}"
+                                         SelectedItem="{Binding SelectedNote, Mode=TwoWay}"
+                                         HorizontalContentAlignment="Stretch"
+                                         BorderThickness="0"
+                                         Background="Transparent">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border x:Name="NoteCard"
+                                                    Margin="0,0,0,10"
+                                                    Padding="14"
+                                                    Background="{DynamicResource ControlMutedBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="10">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="6" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="8" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding DisplayTitle}"
+                                                                   FontWeight="SemiBold"
+                                                                   FontSize="15"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <Button Grid.Column="1"
+                                                                Style="{StaticResource IconButtonStyle}"
+                                                                Width="32"
+                                                                Height="30"
+                                                                FontSize="13"
+                                                                Content="&#xE734;"
+                                                                Opacity="{Binding IsFavorite, Converter={StaticResource FavoriteOpacityConverter}}"
+                                                                ToolTip="Toggle favorite"
+                                                                Command="{Binding DataContext.ToggleNoteFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" />
+                                                    </Grid>
+
+                                                    <TextBlock Grid.Row="2"
+                                                               Text="{Binding BodyPreview}"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               TextWrapping="Wrap"
+                                                               MaxHeight="40" />
+
+                                                    <StackPanel Grid.Row="4">
+                                                        <TextBlock Text="{Binding UpdatedAtText}"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource MutedTextBrush}" />
+                                                        <TextBlock Text="{Binding TagsText}"
+                                                                   Margin="0,4,0,0"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource AccentBrush}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding TagsText}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                    <Setter TargetName="NoteCard" Property="Background" Value="{DynamicResource SelectedItemBrush}" />
+                                                    <Setter TargetName="NoteCard" Property="BorderBrush" Value="{DynamicResource SelectedItemBorderBrush}" />
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <Border Grid.Row="4"
+                                        Padding="14"
+                                        Background="{DynamicResource ControlMutedBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Visibility="{Binding HasNoNotes, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <TextBlock Text="No notes yet"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="15" />
+                                        <TextBlock Text="Create your first note to start writing, pin favorites, and search later."
+                                                   Margin="0,6,0,0"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="18">
+                        <Grid>
+                            <Grid Visibility="{Binding SelectedNote, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <DockPanel LastChildFill="False">
+                                    <TextBlock Text="Editor"
+                                               FontSize="24"
+                                               FontWeight="SemiBold"
+                                               DockPanel.Dock="Left" />
+                                    <StackPanel DockPanel.Dock="Right"
+                                                Orientation="Horizontal">
+                                        <Button Style="{StaticResource IconButtonStyle}"
+                                                Margin="0,0,8,0"
+                                                Content="&#xE734;"
+                                                ToolTip="Toggle favorite"
+                                                Command="{Binding ToggleNoteFavoriteCommand}"
+                                                CommandParameter="{Binding SelectedNote}" />
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                                Content="Delete"
+                                                Padding="14,8"
+                                                Command="{Binding DeleteNoteCommand}"
+                                                CommandParameter="{Binding SelectedNote}" />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <Grid Grid.Row="2">
+                                    <TextBox Text="{Binding NoteEditorTitle, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="20"
+                                             FontWeight="SemiBold"
+                                             ToolTip="Note title" />
+                                    <TextBlock Margin="14,0,14,0"
+                                               Text="Note title"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False"
+                                               Visibility="{Binding NoteEditorTitle, Converter={StaticResource SearchPlaceholderConverter}}" />
+                                </Grid>
+
+                                <Grid Grid.Row="4">
+                                    <TextBox Text="{Binding NoteEditorTagsText, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Comma-separated tags, for example work, ideas, urgent" />
+                                    <TextBlock Margin="14,0,14,0"
+                                               Text="Tags, for example work, ideas, urgent"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False"
+                                               Visibility="{Binding NoteEditorTagsText, Converter={StaticResource SearchPlaceholderConverter}}" />
+                                </Grid>
+
+                                <Grid Grid.Row="6">
+                                    <TextBox Text="{Binding NoteEditorBody, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True"
+                                             AcceptsTab="True"
+                                             TextWrapping="Wrap"
+                                             VerticalContentAlignment="Top"
+                                             VerticalScrollBarVisibility="Auto"
+                                             HorizontalScrollBarVisibility="Disabled"
+                                             ToolTip="Write your note here. Checklist lines such as - [ ] and - [x] are recognized in preview." />
+                                    <TextBlock Margin="14,12,14,12"
+                                               Text="Write your note here. You can use headings and checklist lines like - [ ] or - [x]."
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Top"
+                                               TextWrapping="Wrap"
+                                               IsHitTestVisible="False"
+                                               Visibility="{Binding NoteEditorBody, Converter={StaticResource SearchPlaceholderConverter}}" />
+                                </Grid>
+                            </Grid>
+
+                            <StackPanel Visibility="{Binding SelectedNote, Converter={StaticResource NullToVisibilityConverter}}"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        MaxWidth="340">
+                                <TextBlock Text="Choose a note"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"
+                                           TextAlignment="Center" />
+                                <TextBlock Text="Pick an existing note from the list or create a new one to start editing."
+                                           Margin="0,8,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="4"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="18">
+                        <Grid>
+                            <Grid Visibility="{Binding SelectedNote, Converter={StaticResource NotNullToVisibilityConverter}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="12" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="14" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="Preview"
+                                               FontSize="24"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="Read mode with simple checklist and heading support"
+                                               Margin="0,4,0,0"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <Border Grid.Row="2"
+                                        Background="{DynamicResource ControlMutedBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="14">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Created"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="16,0,0,0"
+                                                       Text="{Binding SelectedNoteCreatedText}" />
+                                        </Grid>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Updated"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="16,0,0,0"
+                                                       Text="{Binding SelectedNoteUpdatedText}" />
+                                        </Grid>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Last viewed"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="16,0,0,0"
+                                                       Text="{Binding SelectedNoteLastViewedText}" />
+                                        </Grid>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Words"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="16,0,0,0"
+                                                       Text="{Binding SelectedNoteWordCountText}" />
+                                        </Grid>
+                                        <Grid Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Checklist"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                            <TextBlock Grid.Column="1"
+                                                       Margin="16,0,0,0"
+                                                       Text="{Binding SelectedNoteChecklistSummaryText}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <ScrollViewer Grid.Row="4"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsControl ItemsSource="{Binding SelectedNotePreviewLines}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="22" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Glyph}"
+                                                               Foreground="{DynamicResource AccentBrush}"
+                                                               VerticalAlignment="Top"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Text}"
+                                                               TextWrapping="Wrap"
+                                                               FontWeight="{Binding FontWeight}"
+                                                               FontSize="{Binding FontSize}"
+                                                               Opacity="{Binding Opacity}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+
+                            <StackPanel Visibility="{Binding SelectedNote, Converter={StaticResource NullToVisibilityConverter}}"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        MaxWidth="260">
+                                <TextBlock Text="Preview will appear here"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           TextAlignment="Center" />
+                                <TextBlock Text="Once a note is selected, this panel shows a simple read view plus note details."
+                                           Margin="0,8,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        </Grid>
+
+        <Grid Grid.RowSpan="2"
               Panel.ZIndex="20"
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
             <Rectangle Fill="{DynamicResource PageBrush}"

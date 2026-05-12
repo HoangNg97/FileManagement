@@ -13,6 +13,7 @@ public sealed class EntryRepository
 
     private readonly string _storageFolder;
     private readonly string _storagePath;
+    private readonly string _legacyStoragePath;
     private readonly string _legacyJsonPath;
     private readonly string _connectionString;
     private readonly JsonSerializerOptions _jsonOptions = new()
@@ -26,7 +27,8 @@ public sealed class EntryRepository
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         _storageFolder = Path.Combine(appData, "LauncherCatalog");
-        _storagePath = Path.Combine(_storageFolder, "entries.db");
+        _storagePath = Path.Combine(_storageFolder, "catalog.db");
+        _legacyStoragePath = Path.Combine(_storageFolder, "entries.db");
         _legacyJsonPath = Path.Combine(_storageFolder, "entries.json");
         _connectionString = new SqliteConnectionStringBuilder
         {
@@ -137,6 +139,7 @@ public sealed class EntryRepository
     private async Task<SqliteConnection> OpenConnectionAsync()
     {
         Directory.CreateDirectory(_storageFolder);
+        EnsureDatabaseFileRenamed();
 
         var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
@@ -146,6 +149,30 @@ public sealed class EntryRepository
         await command.ExecuteNonQueryAsync();
 
         return connection;
+    }
+
+    private void EnsureDatabaseFileRenamed()
+    {
+        if (File.Exists(_storagePath) || !File.Exists(_legacyStoragePath))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Move(_legacyStoragePath, _storagePath);
+        }
+        catch
+        {
+            try
+            {
+                File.Copy(_legacyStoragePath, _storagePath, overwrite: false);
+            }
+            catch
+            {
+                // If both move and copy fail, startup continues and SQLite will create a new catalog.db file.
+            }
+        }
     }
 
     private static async Task InitializeDatabaseAsync(SqliteConnection connection)

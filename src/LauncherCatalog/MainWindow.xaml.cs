@@ -1,9 +1,14 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using LauncherCatalog.Models;
 using LauncherCatalog.Services;
 using LauncherCatalog.ViewModels;
@@ -17,7 +22,10 @@ namespace LauncherCatalog;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
+    private readonly TaskRepository _taskRepository;
+    private readonly EverythingSearchService _everythingSearchService;
     private readonly Forms.NotifyIcon _trayIcon;
+    private readonly TaskReminderService _taskReminderService;
     private readonly GlobalHotkeyService _hotkeyService = new();
     private HwndSource? _hwndSource;
     private QuickSearchWindow? _quickSearchWindow;
@@ -30,17 +38,23 @@ public partial class MainWindow : Window
         var pathValidationService = new PathValidationService();
         var filePickerService = new FilePickerService();
         var entryDialogService = new EntryDialogService(pathValidationService, filePickerService);
+        var noteRepository = new NoteRepository();
+        _everythingSearchService = new EverythingSearchService();
 
         _viewModel = new MainViewModel(
             new EntryRepository(),
+            new TaskRepository(),
+            noteRepository,
             new LauncherService(),
             pathValidationService,
             new IconCacheService(),
-            new EverythingSearchService(),
+            _everythingSearchService,
             new ThemeService(),
             filePickerService,
             entryDialogService,
+            new TaskDialogService(),
             () => this);
+        _taskRepository = new TaskRepository();
 
         DataContext = _viewModel;
         SourceInitialized += MainWindow_SourceInitialized;
@@ -50,13 +64,28 @@ public partial class MainWindow : Window
         Closed += MainWindow_Closed;
 
         _trayIcon = CreateTrayIcon();
+        _taskReminderService = new TaskReminderService(
+            _taskRepository,
+            () => _viewModel.Tasks.ToList(),
+            ShowTaskReminderNotification);
         _hotkeyService.HotkeyPressed += (_, _) => ShowQuickSearch();
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         Loaded -= MainWindow_Loaded;
+        try
+        {
+            await _taskRepository.EnsureInitializedAsync();
+        }
+        catch (Exception exception)
+        {
+            AppLogger.WriteInfo($"Task database initialization failed: {exception.Message}");
+        }
+
         await _viewModel.LoadAsync();
+        _ = _everythingSearchService.EnsureStartedAsync();
+        _taskReminderService.Start();
         RegisterQuickSearchHotkey(showWarning: false);
     }
 
@@ -138,6 +167,7 @@ public partial class MainWindow : Window
     {
         _hwndSource?.RemoveHook(WndProc);
         _hotkeyService.Dispose();
+        _taskReminderService.Dispose();
         _trayIcon.Visible = false;
         _trayIcon.Dispose();
     }
@@ -165,6 +195,14 @@ public partial class MainWindow : Window
     public void ActivateFromExternalInstance()
     {
         RestoreFromTray();
+    }
+
+    private void ShowTaskReminderNotification(string title, string message)
+    {
+        _trayIcon.BalloonTipTitle = title;
+        _trayIcon.BalloonTipText = message;
+        _trayIcon.BalloonTipIcon = Forms.ToolTipIcon.Info;
+        _trayIcon.ShowBalloonTip(10000);
     }
 
     private void QuitFromTray()
@@ -324,5 +362,200 @@ public partial class MainWindow : Window
         }
 
         return null;
+    }
+
+    private static Border? FindTaskRowBorder(DependencyObject source)
+    {
+        while (source is not null)
+        {
+            if (source is Border border && Equals(border.Tag, "TaskRowRoot"))
+            {
+                return border;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return null;
+    }
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            ToggleWindowState();
+            return;
+        }
+
+        DragMove();
+    }
+
+    private void Minimize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaxRestore_Click(object sender, RoutedEventArgs e)
+    {
+        ToggleWindowState();
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        HideToTray();
+    }
+
+    private void ToggleWindowState()
+    {
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
+    }
+
+    private async void RemoveTask_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not TaskItem task)
+        {
+            return;
+        }
+
+        var rowBorder = FindTaskRowBorder(element);
+        if (rowBorder is null)
+        {
+            await _viewModel.DeleteTaskAsync(task);
+            return;
+        }
+
+        var originalHeight = rowBorder.ActualHeight;
+        var originalMargin = rowBorder.Margin;
+
+        try
+        {
+            await AnimateTaskRemovalAsync(rowBorder);
+            await _viewModel.DeleteTaskAsync(task);
+        }
+        catch (Exception exception)
+        {
+            RestoreTaskRow(rowBorder, originalHeight, originalMargin);
+            AppLogger.WriteInfo($"Task removal failed: {exception.Message}");
+            System.Windows.MessageBox.Show(this, "The task could not be removed.", "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private async void TaskStatusOption_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not TaskItem task
+            || element.Tag is not string rawStatus
+            || !Enum.TryParse<LauncherCatalog.Models.TaskStatus>(rawStatus, ignoreCase: true, out var status))
+        {
+            return;
+        }
+
+        await _viewModel.UpdateTaskStatusAsync(task, status);
+        if (FindAncestor<Popup>(element) is { } popup)
+        {
+            popup.IsOpen = false;
+        }
+    }
+
+    private async void TaskDueDateCalendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not Calendar calendar
+            || calendar.DataContext is not TaskItem task
+            || calendar.SelectedDate is not DateTime selectedDate)
+        {
+            return;
+        }
+
+        if (task.DueDate?.Date == selectedDate.Date)
+        {
+            if (FindAncestor<Popup>(calendar) is { } unchangedPopup)
+            {
+                unchangedPopup.IsOpen = false;
+            }
+            return;
+        }
+
+        await _viewModel.UpdateTaskDueDateAsync(task, selectedDate.Date);
+        if (FindAncestor<Popup>(calendar) is { } popup)
+        {
+            popup.IsOpen = false;
+        }
+    }
+
+    private static Task AnimateTaskRemovalAsync(Border rowBorder)
+    {
+        rowBorder.UpdateLayout();
+
+        var originalHeight = rowBorder.ActualHeight;
+        rowBorder.Height = originalHeight;
+        rowBorder.RenderTransformOrigin = new System.Windows.Point(0.5, 0.5);
+        rowBorder.RenderTransform = new TranslateTransform();
+
+        var storyboard = new Storyboard
+        {
+            FillBehavior = FillBehavior.HoldEnd
+        };
+
+        var duration = TimeSpan.FromMilliseconds(260);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
+
+        var opacityAnimation = new DoubleAnimation(1, 0, duration)
+        {
+            EasingFunction = ease
+        };
+        Storyboard.SetTarget(opacityAnimation, rowBorder);
+        Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath(UIElement.OpacityProperty));
+
+        var slideAnimation = new DoubleAnimation(0, 22, duration)
+        {
+            EasingFunction = ease
+        };
+        Storyboard.SetTarget(slideAnimation, rowBorder);
+        Storyboard.SetTargetProperty(slideAnimation, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+
+        var heightAnimation = new DoubleAnimation(originalHeight, 0, duration)
+        {
+            BeginTime = TimeSpan.FromMilliseconds(40),
+            EasingFunction = ease
+        };
+        Storyboard.SetTarget(heightAnimation, rowBorder);
+        Storyboard.SetTargetProperty(heightAnimation, new PropertyPath(FrameworkElement.HeightProperty));
+
+        var marginAnimation = new ThicknessAnimation(rowBorder.Margin, new Thickness(rowBorder.Margin.Left, rowBorder.Margin.Top, rowBorder.Margin.Right, 0), duration)
+        {
+            BeginTime = TimeSpan.FromMilliseconds(40),
+            EasingFunction = ease
+        };
+        Storyboard.SetTarget(marginAnimation, rowBorder);
+        Storyboard.SetTargetProperty(marginAnimation, new PropertyPath(FrameworkElement.MarginProperty));
+
+        storyboard.Children.Add(opacityAnimation);
+        storyboard.Children.Add(slideAnimation);
+        storyboard.Children.Add(heightAnimation);
+        storyboard.Children.Add(marginAnimation);
+
+        var tcs = new TaskCompletionSource();
+        storyboard.Completed += (_, _) => tcs.TrySetResult();
+        storyboard.Begin(rowBorder);
+        return tcs.Task;
+    }
+
+    private static void RestoreTaskRow(Border rowBorder, double originalHeight, Thickness originalMargin)
+    {
+        rowBorder.BeginAnimation(UIElement.OpacityProperty, null);
+        rowBorder.BeginAnimation(FrameworkElement.HeightProperty, null);
+        rowBorder.BeginAnimation(FrameworkElement.MarginProperty, null);
+        if (rowBorder.RenderTransform is TranslateTransform translateTransform)
+        {
+            translateTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            translateTransform.X = 0;
+        }
+
+        rowBorder.Opacity = 1;
+        rowBorder.Height = originalHeight;
+        rowBorder.Margin = originalMargin;
     }
 }

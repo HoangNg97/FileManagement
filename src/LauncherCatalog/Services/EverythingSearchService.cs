@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Text;
 using LauncherCatalog.Models;
 
@@ -8,24 +10,56 @@ namespace LauncherCatalog.Services;
 public sealed class EverythingSearchService
 {
     private const int DefaultResultLimit = 30;
+    private const uint EverythingRequestFullPathAndFileName = 0x00000004;
+    private const string EmbeddedEverythingDllResourceName = "LauncherCatalog.Embedded.Everything64.dll";
 
     private readonly object _lock = new();
-    private string? _queryExecutablePath;
+    private string? _sdkDllPath;
     private string? _appExecutablePath;
-    private bool _knownLocationsInitialized;
-    private bool _pathInitialized;
+    private bool _pathsInitialized;
+    private nint _sdkHandle;
+    private bool _sdkLoadAttempted;
+    private bool _sdkLoaded;
 
-    public bool IsAvailable => !string.IsNullOrWhiteSpace(GetQueryExecutablePath(includePath: false));
-    public bool IsAppInstalled => !string.IsNullOrWhiteSpace(GetAppExecutablePath(includePath: false));
+    public bool IsAvailable => TryLoadSdk() && !string.IsNullOrWhiteSpace(GetAppExecutablePath());
+    public bool IsAppInstalled => !string.IsNullOrWhiteSpace(GetAppExecutablePath());
+
+    public async Task EnsureStartedAsync(CancellationToken cancellationToken = default)
+    {
+        var appPath = GetAppExecutablePath();
+        if (string.IsNullOrWhiteSpace(appPath))
+        {
+            return;
+        }
+
+        if (IsEverythingReady())
+        {
+            return;
+        }
+
+        StartBundledEverything(appPath, runAsAdministrator: false);
+        if (await WaitUntilReadyAsync(cancellationToken))
+        {
+            return;
+        }
+
+        StartBundledEverything(appPath, runAsAdministrator: true);
+        await WaitUntilReadyAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<EverythingResult>> SearchAsync(
         string? query,
         IReadOnlySet<string> savedPaths,
         CancellationToken cancellationToken = default)
     {
-        var queryExecutablePath = GetQueryExecutablePath(includePath: true);
         var trimmedQuery = query?.Trim();
-        if (string.IsNullOrWhiteSpace(queryExecutablePath) || string.IsNullOrWhiteSpace(trimmedQuery))
+        if (string.IsNullOrWhiteSpace(trimmedQuery) || !IsAvailable)
+        {
+            return [];
+        }
+
+        await EnsureStartedAsync(cancellationToken);
+        if (!IsEverythingReady())
         {
             return [];
         }
@@ -43,12 +77,7 @@ public sealed class EverythingSearchService
                 break;
             }
 
-            var variantResults = await SearchVariantAsync(
-                queryExecutablePath,
-                queryVariant,
-                remainingSlots,
-                cancellationToken);
-
+            var variantResults = SearchVariant(queryVariant, remainingSlots);
             foreach (var path in variantResults)
             {
                 if (!seenPaths.Add(path))
@@ -73,86 +102,179 @@ public sealed class EverythingSearchService
         return results;
     }
 
-    private static async Task<IReadOnlyList<string>> SearchVariantAsync(
-        string queryExecutablePath,
-        string query,
-        int limit,
-        CancellationToken cancellationToken)
+    private IReadOnlyList<string> SearchVariant(string query, int limit)
     {
-        using var process = new Process();
-        process.StartInfo = new ProcessStartInfo
+        lock (_lock)
         {
-            FileName = queryExecutablePath,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-        process.StartInfo.ArgumentList.Add("-n");
-        process.StartInfo.ArgumentList.Add(limit.ToString());
-        process.StartInfo.ArgumentList.Add(query);
-
-        var results = new List<string>();
-
-        try
-        {
-            process.Start();
-
-            await foreach (var line in ReadLinesAsync(process.StandardOutput, cancellationToken))
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (string.IsNullOrWhiteSpace(line))
+                if (!TryLoadSdk())
                 {
-                    continue;
+                    return [];
                 }
 
-                results.Add(line.Trim());
+                EverythingNative.Reset();
+                EverythingNative.SetSearch(query);
+                EverythingNative.SetRequestFlags(EverythingRequestFullPathAndFileName);
+                EverythingNative.SetMax((uint)limit);
+                EverythingNative.SetMatchPath(false);
+                EverythingNative.SetRegex(false);
+                EverythingNative.SetMatchCase(false);
+                EverythingNative.SetMatchWholeWord(false);
+
+                if (!EverythingNative.Query(wait: true))
+                {
+                    var error = EverythingNative.GetLastError();
+                    AppLogger.WriteInfo($"Everything query failed. Error code: {error}");
+                    return [];
+                }
+
+                var resultCount = (int)EverythingNative.GetNumResults();
+                var paths = new List<string>(resultCount);
+                var buffer = new StringBuilder(32768);
+
+                for (uint index = 0; index < resultCount; index++)
+                {
+                    buffer.Clear();
+                    var length = EverythingNative.GetResultFullPathName(index, buffer, (uint)buffer.Capacity);
+                    if (length == 0)
+                    {
+                        continue;
+                    }
+
+                    var path = buffer.ToString();
+                    if (!string.IsNullOrWhiteSpace(path))
+                    {
+                        paths.Add(path);
+                    }
+                }
+
+                return paths;
             }
-
-            await process.WaitForExitAsync(cancellationToken);
+            catch
+            {
+                return [];
+            }
         }
-        catch (OperationCanceledException)
-        {
-            TryKill(process);
-            throw;
-        }
-        catch
-        {
-            return [];
-        }
-
-        return results;
     }
 
-    private static async IAsyncEnumerable<string> ReadLinesAsync(
-        StreamReader reader,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    private bool IsEverythingReady()
     {
-        while (!reader.EndOfStream)
+        lock (_lock)
+        {
+            try
+            {
+                if (!TryLoadSdk())
+                {
+                    return false;
+                }
+
+                return EverythingNative.IsDbLoaded();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    private async Task<bool> WaitUntilReadyAsync(CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < 40; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var line = await reader.ReadLineAsync(cancellationToken);
-            if (line is not null)
+
+            if (IsEverythingReady())
             {
-                yield return line;
+                return true;
             }
+
+            await Task.Delay(250, cancellationToken);
         }
+
+        return false;
     }
 
-    private static void TryKill(Process process)
+    private static void StartBundledEverything(string appPath, bool runAsAdministrator)
     {
         try
         {
-            if (!process.HasExited)
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
             {
-                process.Kill(entireProcessTree: true);
+                FileName = appPath,
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Minimized,
+                WorkingDirectory = Path.GetDirectoryName(appPath) ?? AppContext.BaseDirectory,
+                Verb = runAsAdministrator ? "runas" : string.Empty
+            };
+            process.StartInfo.ArgumentList.Add("-startup");
+            process.StartInfo.ArgumentList.Add("-minimized");
+            process.StartInfo.ArgumentList.Add("-first-instance");
+            if (runAsAdministrator)
+            {
+                process.StartInfo.ArgumentList.Add("-admin");
+                process.StartInfo.ArgumentList.Add("-app-data");
             }
+            process.Start();
         }
         catch
         {
-            // The process may have exited between cancellation and kill.
+            // Search calls will fall back to unavailable if the bundled app cannot start.
         }
+    }
+
+    private string? GetSdkDllPath()
+    {
+        EnsurePathsInitialized();
+        return _sdkDllPath;
+    }
+
+    private string? GetAppExecutablePath()
+    {
+        EnsurePathsInitialized();
+        return _appExecutablePath;
+    }
+
+    private void EnsurePathsInitialized()
+    {
+        lock (_lock)
+        {
+            if (_pathsInitialized)
+            {
+                return;
+            }
+
+            _sdkDllPath = FindKnownExecutable("Everything64.dll");
+            _appExecutablePath = FindKnownExecutable("Everything.exe");
+            _pathsInitialized = true;
+        }
+    }
+
+    private static string? FindKnownExecutable(string fileName)
+    {
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, fileName),
+            Path.Combine(AppContext.BaseDirectory, "Everything", fileName),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Everything", fileName),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Everything", fileName)
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        if (string.Equals(fileName, "Everything64.dll", StringComparison.OrdinalIgnoreCase))
+        {
+            return ExtractEmbeddedSdkDll();
+        }
+
+        return null;
     }
 
     private static IReadOnlyList<string> BuildQueryVariants(string query)
@@ -237,91 +359,123 @@ public sealed class EverythingSearchService
         return new string(value.Where(char.IsLetterOrDigit).ToArray());
     }
 
-    private string? GetQueryExecutablePath(bool includePath)
-    {
-        InitializeExecutablePaths(includePath);
-        return _queryExecutablePath;
-    }
-
-    private string? GetAppExecutablePath(bool includePath)
-    {
-        InitializeExecutablePaths(includePath);
-        return _appExecutablePath;
-    }
-
-    private void InitializeExecutablePaths(bool includePath)
-    {
-        lock (_lock)
-        {
-            if (!_knownLocationsInitialized)
-            {
-                _queryExecutablePath = FindKnownExecutable("es.exe");
-                _appExecutablePath = FindKnownExecutable("Everything.exe");
-                _knownLocationsInitialized = true;
-            }
-
-            if (!includePath || _pathInitialized)
-            {
-                return;
-            }
-
-            _queryExecutablePath ??= FindOnPath("es.exe");
-            _appExecutablePath ??= FindOnPath("Everything.exe");
-            _pathInitialized = true;
-        }
-    }
-
-    private static string? FindKnownExecutable(string fileName)
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, fileName),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Everything", fileName),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Everything", fileName)
-        };
-
-        foreach (var candidate in candidates)
-        {
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-        }
-
-        return null;
-    }
-
-    private static string? FindOnPath(string fileName)
-    {
-        var path = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        foreach (var folder in path.Split(Path.PathSeparator))
-        {
-            try
-            {
-                var candidate = Path.Combine(folder.Trim(), fileName);
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-            catch
-            {
-                // Ignore malformed PATH entries.
-            }
-        }
-
-        return null;
-    }
-
     private static string NormalizePath(string? path)
     {
         return string.IsNullOrWhiteSpace(path)
             ? string.Empty
             : path.Trim().TrimEnd('\\', '/');
+    }
+
+    private bool TryLoadSdk()
+    {
+        lock (_lock)
+        {
+            if (_sdkLoaded)
+            {
+                return true;
+            }
+
+            if (_sdkLoadAttempted)
+            {
+                return false;
+            }
+
+            _sdkLoadAttempted = true;
+            var sdkDllPath = GetSdkDllPath();
+            if (string.IsNullOrWhiteSpace(sdkDllPath))
+            {
+                AppLogger.WriteInfo("Everything SDK DLL path could not be resolved.");
+                return false;
+            }
+
+            try
+            {
+                _sdkLoaded = NativeLibrary.TryLoad(sdkDllPath, out _sdkHandle);
+                if (!_sdkLoaded)
+                {
+                    AppLogger.WriteInfo($"Everything SDK DLL could not be loaded from: {sdkDllPath}");
+                    return false;
+                }
+
+                AppLogger.WriteInfo($"Everything SDK DLL loaded from: {sdkDllPath}");
+                return true;
+            }
+            catch (Exception exception)
+            {
+                AppLogger.WriteInfo($"Everything SDK DLL load failed: {exception.Message}");
+                return false;
+            }
+        }
+    }
+
+    private static string? ExtractEmbeddedSdkDll()
+    {
+        try
+        {
+            using var resourceStream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream(EmbeddedEverythingDllResourceName);
+            if (resourceStream is null)
+            {
+                return null;
+            }
+
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var targetDirectory = Path.Combine(appData, "LauncherCatalog", "Runtime", "Everything");
+            Directory.CreateDirectory(targetDirectory);
+
+            var targetPath = Path.Combine(targetDirectory, "Everything64.dll");
+            using var fileStream = File.Create(targetPath);
+            resourceStream.CopyTo(fileStream);
+            fileStream.Flush();
+            return targetPath;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static class EverythingNative
+    {
+        [DllImport("Everything64.dll", CharSet = CharSet.Unicode, EntryPoint = "Everything_SetSearchW")]
+        internal static extern void SetSearch(string searchText);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_SetMatchPath")]
+        internal static extern void SetMatchPath([MarshalAs(UnmanagedType.Bool)] bool enabled);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_SetMatchCase")]
+        internal static extern void SetMatchCase([MarshalAs(UnmanagedType.Bool)] bool enabled);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_SetMatchWholeWord")]
+        internal static extern void SetMatchWholeWord([MarshalAs(UnmanagedType.Bool)] bool enabled);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_SetRegex")]
+        internal static extern void SetRegex([MarshalAs(UnmanagedType.Bool)] bool enabled);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_SetMax")]
+        internal static extern void SetMax(uint max);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_SetRequestFlags")]
+        internal static extern void SetRequestFlags(uint flags);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_QueryW")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool Query([MarshalAs(UnmanagedType.Bool)] bool wait);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_GetNumResults")]
+        internal static extern uint GetNumResults();
+
+        [DllImport("Everything64.dll", CharSet = CharSet.Unicode, EntryPoint = "Everything_GetResultFullPathNameW")]
+        internal static extern uint GetResultFullPathName(uint index, StringBuilder buffer, uint bufferSizeInWchars);
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_IsDBLoaded")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsDbLoaded();
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_GetLastError")]
+        internal static extern uint GetLastError();
+
+        [DllImport("Everything64.dll", EntryPoint = "Everything_Reset")]
+        internal static extern void Reset();
     }
 }

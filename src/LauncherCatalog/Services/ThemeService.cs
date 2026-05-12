@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using LauncherCatalog.Models;
+using MaterialDesignThemes.Wpf;
 
 namespace LauncherCatalog.Services;
 
@@ -18,6 +19,7 @@ public sealed class ThemeService
 
     private static void ApplyLight()
     {
+        ApplyMaterialTheme(BaseTheme.Light, "#2563EB", "#2563EB");
         SetBrush("AccentBrush", "#2563EB");
         SetBrush("AccentSoftBrush", "#EAF1FF");
         SetBrush("SurfaceBrush", "#FFFFFFFF");
@@ -37,10 +39,14 @@ public sealed class ThemeService
         SetBrush("PrimaryPressedBrush", "#1E40AF");
         SetBrush("SelectedItemBrush", "#E8F1FF");
         SetBrush("SelectedItemBorderBrush", "#1E3A8A");
+        SetBrush("MaterialDesign.Brush.ComboBox.HoverBackground", "#00FFFFFF");
+        SetBrush("MaterialDesign.Brush.ComboBox.HoverBorder", "#DDE5F0");
+        SetBrush("MaterialDesign.Brush.TextBox.ComboBoxHover", "#DDE5F0");
     }
 
     private static void ApplyDark()
     {
+        ApplyMaterialTheme(BaseTheme.Dark, "#60A5FA", "#60A5FA");
         SetBrush("AccentBrush", "#60A5FA");
         SetBrush("AccentSoftBrush", "#17365F");
         SetBrush("SurfaceBrush", "#151B24");
@@ -60,11 +66,29 @@ public sealed class ThemeService
         SetBrush("PrimaryPressedBrush", "#2563EB");
         SetBrush("SelectedItemBrush", "#122A4A");
         SetBrush("SelectedItemBorderBrush", "#60A5FA");
+        SetBrush("MaterialDesign.Brush.ComboBox.HoverBackground", "#00FFFFFF");
+        SetBrush("MaterialDesign.Brush.ComboBox.HoverBorder", "#2A3545");
+        SetBrush("MaterialDesign.Brush.TextBox.ComboBoxHover", "#2A3545");
     }
 
     private static void SetBrush(string key, string hex)
     {
         var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
         System.Windows.Application.Current.Resources[key] = new SolidColorBrush(color);
+    }
+
+    private static void ApplyMaterialTheme(BaseTheme baseTheme, string primaryHex, string secondaryHex)
+    {
+        var paletteHelper = new PaletteHelper();
+        Theme theme = paletteHelper.GetTheme();
+        theme.SetBaseTheme(baseTheme);
+        theme.SetPrimaryColor(ParseColor(primaryHex));
+        theme.SetSecondaryColor(ParseColor(secondaryHex));
+        paletteHelper.SetTheme(theme);
+    }
+
+    private static System.Windows.Media.Color ParseColor(string hex)
+    {
+        return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
     }
 }

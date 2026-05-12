@@ -1,6 +1,11 @@
 # Launcher Catalog
 
-Launcher Catalog is a Windows desktop app for saving applications and folders into one searchable launcher list. It is built with C#, WPF, and .NET 8, and is intended to be developed from Visual Studio Code.
+Launcher Catalog is a Windows desktop app built with C#, WPF, and .NET 8.
+
+It currently has 3 main tabs:
+- `Catalog`: searchable launcher list for apps/folders.
+- `Tasks`: task tracker with SQLite-backed create/edit/complete flow.
+- `Note`: local note workspace with search, favorites, tags, live editing, and preview.
 
 ## Requirements
 
@@ -8,14 +13,13 @@ Launcher Catalog is a Windows desktop app for saving applications and folders in
 - .NET 8 SDK with Windows Desktop support
 - Visual Studio Code with the C# extension
 
-The project uses the `Microsoft.Data.Sqlite` NuGet package for local SQLite storage.
+The project uses `Microsoft.Data.Sqlite` for local storage.
 
-Everything integration is optional. The main voidtools app is `Everything.exe`, but in-app result listing requires Everything's command-line query tool, `es.exe`. If `es.exe` is not found, catalog search continues to work normally.
+Everything integration is optional. This project can bundle `Everything.exe` together with the `Everything64.dll` SDK so the app can start Everything in the background and query it directly without relying on a separate `es.exe` install. The source tree keeps only the required runtime files under `Everything/Runtime`.
 
-## Run From VS Code
+## Run
 
-Open this folder in VS Code, then run one of the included tasks:
-
+From VS Code tasks:
 - `build`
 - `run`
 - `publish win-x64`
@@ -27,97 +31,180 @@ dotnet build .\FileLauncherCatalog.sln
 dotnet run --project .\src\LauncherCatalog\LauncherCatalog.csproj
 ```
 
-## Publish
-
-To create a runnable Windows build:
+## Publish (Single EXE)
 
 ```powershell
-.\scripts\publish-windows.ps1
+dotnet publish .\src\LauncherCatalog\LauncherCatalog.csproj -c Release -r win-x64 --self-contained true -o .\dist\LauncherCatalog-win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-The executable is written to:
+Output folder:
 
 ```text
 dist\LauncherCatalog-win-x64
 ```
 
-## What It Does
+## Current UI/UX Notes
 
-- Add application/file entries from any file path. Windows opens them the same way it would when double-clicked.
-- Add folder entries from a folder picker.
-- Edit display name, path, tags, and note.
-- Search the saved catalog by display name, file name, folder name, full path, tags, and note.
-- Optionally include Everything filesystem results below saved catalog matches.
-- Open apps and folders from the list.
-- Reveal saved locations in File Explorer.
-- Copy full paths.
-- Delete catalog records without deleting files from disk.
-- Detect missing paths and show a clear status badge.
-- Show only folder names in the main list while exposing full paths through tooltips and the details panel.
+- Custom window chrome is enabled (`WindowStyle=None`) with an in-app title bar.
+- The title bar includes:
+  - theme toggle (dark/light)
+  - minimize / maximize-restore / close buttons
+- Title bar supports drag and double-click maximize/restore.
+- Task due-date selection uses a text-first field that opens a Material Design popup calendar and follows both light and dark mode.
+- Catalog/task filter dropdowns use padded left-aligned labels, and task due-date/action controls use compact sizing to preserve table readability.
+
+## Catalog Feature
+
+- Add app/file entries from file path
+- Add folder entries from folder picker
+- Edit display name, path, tags, note
+- Search by display name, file/folder names, full path, tags, note
+- Optional Everything results shown below catalog results
+- Open, reveal in Explorer, copy path, delete (without deleting files)
+- Missing-path detection with status badge
+- Favorites and sorting/filtering support
+
+## Tasks Feature
+
+Tasks are persisted in `task.db` and shown in the `Tasks` tab list.
+
+Current task capabilities:
+- Create task (dialog)
+- Edit task (icon button in each row)
+- Remove task from the list/database from the `Mark as Completed` action
+- Toggle task reminders from a bell button in each task row
+
+Task dialog behavior:
+- Create mode:
+  - `Status` fixed to `Todo` (read-only)
+  - `Priority`: `Low`, `Normal`, `Urgent` (default `Normal`)
+  - `Due Date`: displayed as date text in a simple field; clicking it opens a Material Design popup calendar
+  - task reminders default to enabled
+- Edit mode:
+  - all fields editable
+  - action button label is `Edit`
+
+Task reminder rules:
+- `Done`: no reminders
+- `On-going` + `Urgent`: morning and afternoon reminders
+- `On-going` + `Normal`: morning reminder only
+- `On-going` + `Low`: no reminders
+- `Todo` + `Urgent`: reminder every 3 hours
+- `Todo` + `Normal`: morning and afternoon reminders
+- `Todo` + `Low`: morning reminder only
+
+## Note Feature
+
+Notes are persisted in `note.db` and shown in the `Note` tab workspace.
+
+Current note capabilities:
+- Create and delete notes
+- Edit note title, tags, and body in-place
+- Debounced auto-save while typing
+- Search notes by title, body, or tags
+- Filter notes by `All Notes`, `Favorites`, `Recent`, or `Tagged`
+- Favorite notes for quick access
+- Track last viewed time for recent-note sorting
+- Simple read preview with checklist (`- [ ]`, `- [x]`) and heading support
+- Split note workspace with list, editor, and preview/details panels
 
 ## Storage
 
-Entries and app settings, including the last selected light/dark theme, are stored in a local SQLite database in the current user's local app data folder:
+All app data is under:
 
 ```text
-%LOCALAPPDATA%\LauncherCatalog\entries.db
+%LOCALAPPDATA%\LauncherCatalog
 ```
 
-The app does not require admin rights and does not require a separate SQLite installation. Published single-file builds bundle the SQLite runtime with the app.
+### Catalog DB
 
-Older builds stored data in:
+```text
+%LOCALAPPDATA%\LauncherCatalog\catalog.db
+```
+
+Notes:
+- Legacy SQLite filename `entries.db` is auto-migrated to `catalog.db` on startup if needed.
+- Legacy JSON import source is still:
 
 ```text
 %LOCALAPPDATA%\LauncherCatalog\entries.json
 ```
 
-When the new SQLite build starts for the first time, it imports that JSON file into `entries.db` automatically. After a successful import, it keeps a timestamped compatibility backup named `entries.migrated-*.json`. If the legacy JSON file is malformed, the app moves it to an `entries.invalid-*.json` backup and starts with an empty SQLite catalog.
+If JSON migration succeeds, backup file:
+- `entries.migrated-*.json`
+
+If JSON is malformed, backup file:
+- `entries.invalid-*.json`
+
+### Task DB
+
+```text
+%LOCALAPPDATA%\LauncherCatalog\task.db
+```
+
+Current `tasks` schema is intentionally extendable (includes `status`, `priority`, `due_date`, `notifications_enabled`, `last_reminder_key`, `created_at`, `updated_at`, `completed_at`, `sort_order`, etc.).
+
+### Note DB
+
+```text
+%LOCALAPPDATA%\LauncherCatalog\note.db
+```
+
+Current `notes` schema stores `title`, `body`, `tags_json`, `is_favorite`, `created_at`, `updated_at`, and `last_viewed_at`.
 
 ## Crash Logs
 
-If the app hits an unexpected fatal error, it writes a log file here:
+Crash logs:
 
 ```text
 %LOCALAPPDATA%\LauncherCatalog\Logs
 ```
 
-The newest crash is also copied to:
+Latest crash mirror:
 
 ```text
 %LOCALAPPDATA%\LauncherCatalog\Logs\latest.log
 ```
 
-Legacy JSON import supports a file with a `settings` object and an `entries` array. Example entry inside `entries`:
+## Gemini OAuth Setup
 
-```json
-{
-  "id": "00000000-0000-0000-0000-000000000000",
-  "type": "App",
-  "displayName": "Photoshop",
-  "exePath": "D:\\Tools\\Adobe\\Photoshop\\Photoshop.exe",
-  "exeName": "Photoshop.exe",
-  "folderName": "Photoshop",
-  "folderPath": "D:\\Tools\\Adobe\\Photoshop",
-  "tags": ["design", "image"],
-  "note": "Main editing app",
-  "dateAdded": "2026-04-21T10:00:00",
-  "lastOpened": null,
-  "isMissing": false,
-  "isFavorite": false
-}
+Current Gemini setup status:
+- Google OAuth desktop-app sign-in flow is wired through `GoogleWebAuthorizationBroker`
+- tokens are cached locally so login should persist across app restarts
+- `client_secret.json` is embedded into the app assembly for single-EXE-friendly distribution
+
+Required file for local auth:
+
+```text
+client_secret.json
 ```
+
+Current project setup:
+- development source file lives at `src/LauncherCatalog/client_secret.json`
+- the build embeds it into the executable assembly
+- runtime auth no longer depends on a sidecar JSON file next to the EXE
 
 ## Project Structure
 
 ```text
 src/LauncherCatalog/
-  Models/        Entry data types
-  Services/      SQLite repository, launching, search, validation, dialogs
+  Models/        Catalog + task data types/enums
+  Services/      SQLite repositories, launching, search, validation, dialog services
   ViewModels/    MVVM state and commands
-  Views/         Add/edit dialog
+  Views/         Windows/dialog XAML UI
   Converters/    XAML presentation converters
 ```
 
-## Future Features
+## Handoff Notes For New Chats
 
-Good next steps are import/export, drag and drop, custom extracted icons, dark mode, and Start Menu import. The current service boundaries are meant to make those additions local rather than invasive.
+When starting a new chat, read this file first, then assume:
+- `Catalog`, `Tasks`, and `Note` are all active tabs in the UI.
+- Catalog data uses `catalog.db`.
+- Task data uses `task.db`.
+- Note data uses `note.db`.
+- The app uses custom title bar/window chrome.
+
+## Maintenance Rule
+
+Important project rule:
+- **Whenever new features, behavior, schema, commands, or architecture change, update `README.md` in the same change set so this document always stays current.**
