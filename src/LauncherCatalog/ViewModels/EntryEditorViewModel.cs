@@ -8,6 +8,7 @@ namespace LauncherCatalog.ViewModels;
 
 public sealed class EntryEditorViewModel : ObservableObject
 {
+    private readonly LocalizationService _localizer = LocalizationService.Current;
     private readonly PathValidationService _pathValidationService;
     private string _displayName = string.Empty;
     private string _path = string.Empty;
@@ -46,8 +47,8 @@ public sealed class EntryEditorViewModel : ObservableObject
     public DateTime DateAdded { get; }
     public DateTime? LastOpened { get; }
     public bool IsFavorite { get; }
-    public string WindowTitle => Type == EntryType.App ? "App entry" : "Folder entry";
-    public string PathLabel => Type == EntryType.App ? "File path" : "Folder path";
+    public string WindowTitle => Type == EntryType.App ? _localizer.Get("Entry.Dialog.AppTitle") : _localizer.Get("Entry.Dialog.FolderTitle");
+    public string PathLabel => Type == EntryType.App ? _localizer.Get("Entry.Dialog.PathLabelFile") : _localizer.Get("Entry.Dialog.PathLabelFolder");
     public string BrowseGlyph => Type == EntryType.App ? "\uE8E5" : "\uE8B7";
     public ObservableCollection<string> AvailableRecentTags { get; } = [];
     public ICommand AddRecentTagCommand { get; }
@@ -132,19 +133,19 @@ public sealed class EntryEditorViewModel : ObservableObject
 
         if (string.IsNullOrWhiteSpace(DisplayName))
         {
-            message = "Please enter a display name.";
+            message = _localizer.Get("Entry.Dialog.ValidationDisplayName");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(Path))
         {
-            message = "Please choose a path.";
+            message = _localizer.Get("Entry.Dialog.ValidationPath");
             return false;
         }
 
         if (Type == EntryType.App && !_pathValidationService.IsSupportedAppPath(Path))
         {
-            message = "Please choose a file path.";
+            message = _localizer.Get("Entry.Dialog.ValidationFilePath");
             return false;
         }
 

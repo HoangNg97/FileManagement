@@ -296,7 +296,7 @@ public sealed class EntryRepository
         command.CommandText = """
             SELECT key, value
             FROM settings
-            WHERE key IN ('theme', 'quick_search_hotkey');
+            WHERE key IN ('theme', 'quick_search_hotkey', 'language_code');
             """;
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -312,6 +312,10 @@ public sealed class EntryRepository
             else if (key == "quick_search_hotkey" && !string.IsNullOrWhiteSpace(value))
             {
                 settings.QuickSearchHotkey = value;
+            }
+            else if (key == "language_code" && !string.IsNullOrWhiteSpace(value))
+            {
+                settings.LanguageCode = value;
             }
         }
 
@@ -388,9 +392,14 @@ public sealed class EntryRepository
             INSERT INTO settings (key, value)
             VALUES ('quick_search_hotkey', $quickSearchHotkey)
             ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+
+            INSERT INTO settings (key, value)
+            VALUES ('language_code', $languageCode)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value;
             """;
         command.Parameters.AddWithValue("$theme", settings.Theme.ToString());
         command.Parameters.AddWithValue("$quickSearchHotkey", settings.QuickSearchHotkey);
+        command.Parameters.AddWithValue("$languageCode", settings.LanguageCode);
         await command.ExecuteNonQueryAsync();
     }
 

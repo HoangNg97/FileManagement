@@ -11,6 +11,7 @@ namespace LauncherCatalog.ViewModels;
 
 public sealed class MainViewModel : ObservableObject
 {
+    private readonly LocalizationService _localizer = LocalizationService.Current;
     private readonly EntryRepository _repository;
     private readonly TaskRepository _taskRepository;
     private readonly NoteRepository _noteRepository;
@@ -26,15 +27,16 @@ public sealed class MainViewModel : ObservableObject
     private const int SearchDebounceMilliseconds = 220;
 
     private string _searchText = string.Empty;
-    private EntryFilter _selectedFilter = EntryFilter.All;
-    private SearchSourceMode _selectedSearchSource = SearchSourceMode.Both;
-    private SortMode _selectedSort = SortMode.Name;
+    private LocalizedOption<EntryFilter> _selectedFilterOption = null!;
+    private LocalizedOption<SearchSourceMode> _selectedSearchSourceOption = null!;
+    private LocalizedOption<SortMode> _selectedSortOption = null!;
+    private LocalizedOption<NoteFilterMode> _selectedNoteFilterOption = null!;
+    private LanguageOption _selectedLanguage = null!;
     private CatalogEntry? _selectedEntry;
     private NoteItem? _selectedNote;
-    private string _statusMessage = "Ready";
-    private string _loadingMessage = "Loading data";
+    private string _statusMessage;
+    private string _loadingMessage;
     private string _noteSearchText = string.Empty;
-    private string _selectedNoteFilter = "All Notes";
     private string _noteEditorTitle = string.Empty;
     private string _noteEditorBody = string.Empty;
     private string _noteEditorTagsText = string.Empty;
@@ -76,6 +78,42 @@ public sealed class MainViewModel : ObservableObject
         _entryDialogService = entryDialogService;
         _taskDialogService = taskDialogService;
         _ownerProvider = ownerProvider;
+        _statusMessage = _localizer.Get("Common.Ready");
+        _loadingMessage = _localizer.Get("Common.LoadingData");
+
+        Filters =
+        [
+            new(EntryFilter.All, "CatalogFilter.All"),
+            new(EntryFilter.Apps, "CatalogFilter.Apps"),
+            new(EntryFilter.Folders, "CatalogFilter.Folders"),
+            new(EntryFilter.Missing, "CatalogFilter.Missing")
+        ];
+        SearchSources =
+        [
+            new(SearchSourceMode.Catalog, "CatalogSearchSource.Catalog"),
+            new(SearchSourceMode.Everything, "CatalogSearchSource.Everything"),
+            new(SearchSourceMode.Both, "CatalogSearchSource.Both")
+        ];
+        SortModes =
+        [
+            new(SortMode.Name, "CatalogSort.Name"),
+            new(SortMode.Type, "CatalogSort.Type"),
+            new(SortMode.RecentlyAdded, "CatalogSort.RecentlyAdded"),
+            new(SortMode.LastOpened, "CatalogSort.LastOpened")
+        ];
+        NoteFilters =
+        [
+            new(NoteFilterMode.All, "CatalogFilter.All"),
+            new(NoteFilterMode.Favorites, "NoteFilter.Favorites"),
+            new(NoteFilterMode.Recent, "NoteFilter.Recent"),
+            new(NoteFilterMode.Tagged, "NoteFilter.Tagged")
+        ];
+        _selectedFilterOption = Filters.First(option => option.Value == EntryFilter.All);
+        _selectedSearchSourceOption = SearchSources.First(option => option.Value == SearchSourceMode.Both);
+        _selectedSortOption = SortModes.First(option => option.Value == SortMode.Name);
+        _selectedNoteFilterOption = NoteFilters.First(option => option.Value == NoteFilterMode.All);
+        _selectedLanguage = _localizer.Languages.First(language => language.Code == "en");
+        _localizer.CultureChanged += (_, _) => RefreshLocalizedState();
 
         EntriesView = CollectionViewSource.GetDefaultView(Entries);
         EntriesView.Filter = FilterEntry;
@@ -104,6 +142,7 @@ public sealed class MainViewModel : ObservableObject
         CreateNoteCommand = new AsyncRelayCommand(CreateNoteAsync);
         DeleteNoteCommand = new AsyncRelayCommand(DeleteNoteAsync, parameter => parameter is NoteItem || SelectedNote is not null);
         ToggleNoteFavoriteCommand = new AsyncRelayCommand(ToggleNoteFavoriteAsync, parameter => parameter is NoteItem || SelectedNote is not null);
+        ToggleLanguageCommand = new RelayCommand(_ => ToggleLanguage());
     }
 
     public ObservableCollection<CatalogEntry> Entries { get; } = [];
@@ -113,10 +152,11 @@ public sealed class MainViewModel : ObservableObject
     public ObservableCollection<EverythingResult> EverythingResults { get; } = [];
     public ICollectionView EntriesView { get; }
     public ICollectionView NotesView { get; }
-    public EntryFilter[] Filters { get; } = [EntryFilter.All, EntryFilter.Apps, EntryFilter.Folders, EntryFilter.Missing];
-    public SearchSourceMode[] SearchSources { get; } = [SearchSourceMode.Catalog, SearchSourceMode.Everything, SearchSourceMode.Both];
-    public SortMode[] SortModes { get; } = [SortMode.Name, SortMode.Type, SortMode.RecentlyAdded, SortMode.LastOpened];
-    public string[] NoteFilters { get; } = ["All Notes", "Favorites", "Recent", "Tagged"];
+    public LocalizedOption<EntryFilter>[] Filters { get; }
+    public LocalizedOption<SearchSourceMode>[] SearchSources { get; }
+    public LocalizedOption<SortMode>[] SortModes { get; }
+    public LocalizedOption<NoteFilterMode>[] NoteFilters { get; }
+    public ReadOnlyCollection<LanguageOption> Languages => _localizer.Languages;
 
     public AsyncRelayCommand AddAppCommand { get; }
     public AsyncRelayCommand AddFolderCommand { get; }
@@ -138,6 +178,7 @@ public sealed class MainViewModel : ObservableObject
     public AsyncRelayCommand CreateNoteCommand { get; }
     public AsyncRelayCommand DeleteNoteCommand { get; }
     public AsyncRelayCommand ToggleNoteFavoriteCommand { get; }
+    public RelayCommand ToggleLanguageCommand { get; }
 
     public string SearchText
     {
@@ -151,24 +192,28 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public EntryFilter SelectedFilter
+    public EntryFilter SelectedFilter => SelectedFilterOption.Value;
+
+    public LocalizedOption<EntryFilter> SelectedFilterOption
     {
-        get => _selectedFilter;
+        get => _selectedFilterOption;
         set
         {
-            if (SetProperty(ref _selectedFilter, value))
+            if (SetProperty(ref _selectedFilterOption, value))
             {
                 QueueSearchRefresh();
             }
         }
     }
 
-    public SearchSourceMode SelectedSearchSource
+    public SearchSourceMode SelectedSearchSource => SelectedSearchSourceOption.Value;
+
+    public LocalizedOption<SearchSourceMode> SelectedSearchSourceOption
     {
-        get => _selectedSearchSource;
+        get => _selectedSearchSourceOption;
         set
         {
-            if (SetProperty(ref _selectedSearchSource, value))
+            if (SetProperty(ref _selectedSearchSourceOption, value))
             {
                 QueueSearchRefresh();
                 OnPropertyChanged(nameof(ShowCatalogResults));
@@ -182,12 +227,14 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public SortMode SelectedSort
+    public SortMode SelectedSort => SelectedSortOption.Value;
+
+    public LocalizedOption<SortMode> SelectedSortOption
     {
-        get => _selectedSort;
+        get => _selectedSortOption;
         set
         {
-            if (SetProperty(ref _selectedSort, value))
+            if (SetProperty(ref _selectedSortOption, value))
             {
                 ApplySort();
             }
@@ -259,15 +306,33 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public string SelectedNoteFilter
+    public LocalizedOption<NoteFilterMode> SelectedNoteFilterOption
     {
-        get => _selectedNoteFilter;
+        get => _selectedNoteFilterOption;
         set
         {
-            if (SetProperty(ref _selectedNoteFilter, value))
+            if (SetProperty(ref _selectedNoteFilterOption, value))
             {
                 RefreshNotesView();
             }
+        }
+    }
+
+    public LanguageOption SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set
+        {
+            if (!SetProperty(ref _selectedLanguage, value) || value is null)
+            {
+                return;
+            }
+
+            _repository.Settings.LanguageCode = value.Code;
+            _localizer.SetLanguage(value.Code);
+            _ = SaveSettingsAsync("Settings.Language.SaveFailed");
+            StatusMessage = _localizer.Format("Settings.Language.Updated", value.NativeName);
+            OnPropertyChanged(nameof(CurrentLanguageButtonText));
         }
     }
 
@@ -310,12 +375,13 @@ public sealed class MainViewModel : ObservableObject
     public string StoragePath => _repository.StoragePath;
     public string NoteStoragePath => _noteRepository.StoragePath;
     public string QuickSearchHotkeyText => _repository.Settings.QuickSearchHotkey;
-    public string QuickSearchHotkeyToolTip => $"Quick search shortcut: {QuickSearchHotkeyText}";
+    public string QuickSearchHotkeyToolTip => _localizer.Format("Main.QuickSearchTooltip", QuickSearchHotkeyText);
+    public string CurrentLanguageButtonText => string.Equals(SelectedLanguage.Code, "ja", StringComparison.OrdinalIgnoreCase) ? "JP" : "EN";
     public string ResultCountText => SelectedSearchSource switch
     {
-        SearchSourceMode.Everything => $"{_everythingResultCount} Everything result(s)",
-        SearchSourceMode.Both => $"{_resultCount} catalog, {_everythingResultCount} Everything of {Entries.Count} saved",
-        _ => $"{_resultCount} of {Entries.Count} saved"
+        SearchSourceMode.Everything => _localizer.Format("Main.ResultCount.EverythingOnly", _everythingResultCount),
+        SearchSourceMode.Both => _localizer.Format("Main.ResultCount.Both", _resultCount, _everythingResultCount, Entries.Count),
+        _ => _localizer.Format("Main.ResultCount.CatalogOnly", _resultCount, Entries.Count)
     };
     public bool HasEntries => Entries.Count > 0;
     public bool HasNoEntries => Entries.Count == 0;
@@ -328,31 +394,34 @@ public sealed class MainViewModel : ObservableObject
         && !HasEverythingResults
         && !string.IsNullOrWhiteSpace(SearchText);
     public string EverythingInfoTitle => _everythingSearchService.IsAvailable
-        ? "No Everything results"
+        ? _localizer.Get("Main.Everything.Info.NoResultsTitle")
         : _everythingSearchService.IsAppInstalled
-            ? "Everything starting"
-            : "Everything unavailable";
+            ? _localizer.Get("Main.Everything.Info.StartingTitle")
+            : _localizer.Get("Main.Everything.Info.UnavailableTitle");
     public string EverythingInfoMessage => _everythingSearchService.IsAvailable
-        ? "No filesystem matches were found for this search."
+        ? _localizer.Get("Main.Everything.Info.NoResultsMessage")
         : _everythingSearchService.IsAppInstalled
-            ? "Catalog search still works. The bundled Everything search engine may still be starting."
-            : "Catalog search still works. Bundle or install Everything to include filesystem matches here.";
+            ? _localizer.Get("Main.Everything.Info.StartingMessage")
+            : _localizer.Get("Main.Everything.Info.UnavailableMessage");
     public bool ShowEmptyCatalogState => HasNoEntries && ShowCatalogResults;
     public string EverythingStatusText => _everythingSearchService.IsAvailable
-        ? "Everything results"
+        ? _localizer.Get("Main.Everything.Status.Results")
         : _everythingSearchService.IsAppInstalled
-            ? "Everything starting"
-        : "Everything unavailable";
+            ? _localizer.Get("Main.Everything.Status.Starting")
+        : _localizer.Get("Main.Everything.Status.Unavailable");
+    public string EverythingResultCountText => _localizer.Format("Main.Everything.Count", EverythingResults.Count);
     public int MissingCount => Entries.Count(entry => entry.IsMissing);
     public bool HasNotes => Notes.Count > 0;
     public bool HasNoNotes => Notes.Count == 0;
     public bool HasSelectedNote => SelectedNote is not null;
     public bool ShowNoMatchingNotesState => HasNotes && _visibleNoteCount == 0;
-    public string NoteResultCountText => _visibleNoteCount == 1 ? "1 note" : $"{_visibleNoteCount} notes";
+    public string NoteResultCountText => _visibleNoteCount == 1
+        ? _localizer.Get("Main.Note.Count.One")
+        : _localizer.Format("Main.Note.Count.Many", _visibleNoteCount);
     public string SelectedNoteCreatedText => SelectedNote?.CreatedAtText ?? "-";
     public string SelectedNoteUpdatedText => SelectedNote?.UpdatedAtText ?? "-";
     public string SelectedNoteLastViewedText => SelectedNote?.LastViewedAtText ?? "-";
-    public string SelectedNoteWordCountText => $"{CountWords(NoteEditorBody)} words";
+    public string SelectedNoteWordCountText => _localizer.Format("Task.WordCount", CountWords(NoteEditorBody));
     public string SelectedNoteChecklistSummaryText => GetChecklistSummaryText(NoteEditorBody);
 
     public bool IsDarkMode
@@ -368,16 +437,16 @@ public sealed class MainViewModel : ObservableObject
             var theme = value ? AppTheme.Dark : AppTheme.Light;
             _repository.Settings.Theme = theme;
             _themeService.Apply(theme);
-            _ = SaveSettingsAsync("Theme changed, but saving the setting failed.");
-            StatusMessage = value ? "Dark mode enabled." : "Light mode enabled.";
+            _ = SaveSettingsAsync("Settings.Theme.SaveFailed");
+            StatusMessage = value ? _localizer.Get("Settings.Theme.DarkEnabled") : _localizer.Get("Settings.Theme.LightEnabled");
         }
     }
 
     public async Task LoadAsync()
     {
         IsLoading = true;
-        LoadingMessage = "Loading data";
-        StatusMessage = "Loading data...";
+        LoadingMessage = _localizer.Get("Common.LoadingData");
+        StatusMessage = $"{_localizer.Get("Common.LoadingData")}...";
 
         try
         {
@@ -415,12 +484,13 @@ public sealed class MainViewModel : ObservableObject
                 : null;
 
             ApplyStoredTheme();
+            ApplyStoredLanguage();
 
             await RefreshSearchImmediatelyAsync();
             RaiseCatalogStatsChanged();
             StatusMessage = Entries.Count == 0
-                ? "Ready. Add an app or folder to begin."
-                : $"Loaded {Entries.Count} saved item(s).";
+                ? _localizer.Get("Catalog.Message.EmptyReady")
+                : _localizer.Format("Catalog.Message.Loaded", Entries.Count);
 
             QueueLazyIconLoad(loadedEntries);
             QueueMissingStateRefresh(loadedEntries);
@@ -441,7 +511,7 @@ public sealed class MainViewModel : ObservableObject
 
         await _taskRepository.CreateAsync(task);
         await RefreshTasksAsync();
-        StatusMessage = "Task created.";
+        StatusMessage = _localizer.Get("Task.Message.Created");
     }
 
     private async Task MarkTaskCompletedAsync(object? parameter)
@@ -469,7 +539,7 @@ public sealed class MainViewModel : ObservableObject
 
         await _taskRepository.UpdateAsync(editedTask);
         await RefreshTasksAsync();
-        StatusMessage = $"Task \"{editedTask.Title}\" updated.";
+        StatusMessage = _localizer.Format("Task.Message.Updated", editedTask.Title);
     }
 
     private async Task RefreshTasksAsync()
@@ -497,7 +567,7 @@ public sealed class MainViewModel : ObservableObject
 
         await _taskRepository.UpdateAsync(task);
         await RefreshTasksAsync();
-        StatusMessage = $"Task \"{task.Title}\" status updated.";
+        StatusMessage = _localizer.Format("Task.Message.StatusUpdated", task.Title);
     }
 
     public async Task UpdateTaskDueDateAsync(TaskItem task, DateTime dueDate)
@@ -507,7 +577,7 @@ public sealed class MainViewModel : ObservableObject
 
         await _taskRepository.UpdateAsync(task);
         await RefreshTasksAsync();
-        StatusMessage = $"Task \"{task.Title}\" due date updated.";
+        StatusMessage = _localizer.Format("Task.Message.DueDateUpdated", task.Title);
     }
 
     public async Task DeleteTaskAsync(TaskItem task)
@@ -523,7 +593,7 @@ public sealed class MainViewModel : ObservableObject
         MarkTaskCompletedCommand.RaiseCanExecuteChanged();
         EditTaskCommand.RaiseCanExecuteChanged();
         ToggleTaskNotificationsCommand.RaiseCanExecuteChanged();
-        StatusMessage = $"Task \"{task.Title}\" removed.";
+        StatusMessage = _localizer.Format("Task.Message.Removed", task.Title);
     }
 
     public async Task ToggleTaskNotificationsAsync(object? parameter)
@@ -537,8 +607,8 @@ public sealed class MainViewModel : ObservableObject
         await _taskRepository.UpdateNotificationStateAsync(task.Id, notificationsEnabled);
         await RefreshTasksAsync();
         StatusMessage = notificationsEnabled
-            ? $"Notifications enabled for \"{task.Title}\"."
-            : $"Notifications disabled for \"{task.Title}\".";
+            ? _localizer.Format("Task.Message.NotificationsEnabled", task.Title)
+            : _localizer.Format("Task.Message.NotificationsDisabled", task.Title);
     }
 
     private async Task CreateNoteAsync()
@@ -560,7 +630,7 @@ public sealed class MainViewModel : ObservableObject
         ApplyNoteSort();
         RefreshNotesView();
         SelectedNote = note;
-        StatusMessage = "Note created.";
+        StatusMessage = _localizer.Get("Note.Message.Created");
     }
 
     private async Task DeleteNoteAsync(object? parameter)
@@ -573,8 +643,8 @@ public sealed class MainViewModel : ObservableObject
 
         var response = System.Windows.MessageBox.Show(
             _ownerProvider(),
-            $"Delete \"{note.DisplayTitle}\"?",
-            "Delete note",
+            _localizer.Format("Note.Message.DeleteConfirm", note.DisplayTitle),
+            _localizer.Get("Note.Message.DeleteTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
@@ -593,7 +663,7 @@ public sealed class MainViewModel : ObservableObject
             : Notes[Math.Clamp(index, 0, Notes.Count - 1)];
 
         RefreshNotesView();
-        StatusMessage = $"Note \"{note.DisplayTitle}\" deleted.";
+        StatusMessage = _localizer.Format("Note.Message.Deleted", note.DisplayTitle);
     }
 
     private async Task ToggleNoteFavoriteAsync(object? parameter)
@@ -610,8 +680,8 @@ public sealed class MainViewModel : ObservableObject
         ApplyNoteSort();
         RefreshNotesView();
         StatusMessage = note.IsFavorite
-            ? $"Added \"{note.DisplayTitle}\" to favorites."
-            : $"Removed \"{note.DisplayTitle}\" from favorites.";
+            ? _localizer.Format("Note.Message.FavoriteAdded", note.DisplayTitle)
+            : _localizer.Format("Note.Message.FavoriteRemoved", note.DisplayTitle);
     }
 
     public async Task UpdateQuickSearchHotkeyAsync(string hotkeyText)
@@ -624,8 +694,8 @@ public sealed class MainViewModel : ObservableObject
         _repository.Settings.QuickSearchHotkey = hotkeyText;
         OnPropertyChanged(nameof(QuickSearchHotkeyText));
         OnPropertyChanged(nameof(QuickSearchHotkeyToolTip));
-        await SaveSettingsAsync("Shortcut changed, but saving the setting failed.");
-        StatusMessage = $"Quick search shortcut set to {hotkeyText}.";
+        await SaveSettingsAsync("Settings.Hotkey.SaveFailed");
+        StatusMessage = _localizer.Format("Settings.Hotkey.Updated", hotkeyText);
     }
 
     private async Task AddAppAsync()
@@ -639,13 +709,13 @@ public sealed class MainViewModel : ObservableObject
 
         if (!_pathValidationService.IsSupportedAppPath(path))
         {
-            ShowWarning("Please choose a file.");
+            ShowWarning(_localizer.Get("Catalog.Warning.ChooseFile"));
             return;
         }
 
         if (HasDuplicatePath(path))
         {
-            ShowWarning("That path is already saved in the catalog.");
+            ShowWarning(_localizer.Get("Catalog.Warning.PathAlreadySaved"));
             return;
         }
 
@@ -654,13 +724,13 @@ public sealed class MainViewModel : ObservableObject
         {
             if (HasDuplicatePath(editedEntry.PrimaryPath))
             {
-                ShowWarning("That path is already saved in the catalog.");
+                ShowWarning(_localizer.Get("Catalog.Warning.PathAlreadySaved"));
                 return;
             }
 
             _pathValidationService.RefreshMissingState(editedEntry);
             Entries.Add(editedEntry);
-            await PersistAsync("App saved.");
+            await PersistAsync(_localizer.Get("Catalog.Message.AppSaved"));
             QueueLazyIconLoad(editedEntry);
         }
     }
@@ -676,7 +746,7 @@ public sealed class MainViewModel : ObservableObject
 
         if (HasDuplicatePath(path))
         {
-            ShowWarning("That folder is already saved in the catalog.");
+            ShowWarning(_localizer.Get("Catalog.Warning.FolderAlreadySaved"));
             return;
         }
 
@@ -685,13 +755,13 @@ public sealed class MainViewModel : ObservableObject
         {
             if (HasDuplicatePath(editedEntry.PrimaryPath))
             {
-                ShowWarning("That folder is already saved in the catalog.");
+                ShowWarning(_localizer.Get("Catalog.Warning.FolderAlreadySaved"));
                 return;
             }
 
             _pathValidationService.RefreshMissingState(editedEntry);
             Entries.Add(editedEntry);
-            await PersistAsync("Folder saved.");
+            await PersistAsync(_localizer.Get("Catalog.Message.FolderSaved"));
         }
     }
 
@@ -713,14 +783,14 @@ public sealed class MainViewModel : ObservableObject
 
         if (HasDuplicatePath(editedEntry.PrimaryPath, editedEntry.Id))
         {
-            ShowWarning("Another saved item already uses that path.");
+            ShowWarning(_localizer.Get("Catalog.Warning.PathUsedByAnother"));
             return;
         }
 
         _pathValidationService.RefreshMissingState(editedEntry);
         editedEntry.IconPath = null;
         entry.CopyFrom(editedEntry);
-        await PersistAsync("Entry updated.");
+        await PersistAsync(_localizer.Get("Catalog.Message.EntryUpdated"));
         QueueLazyIconLoad(entry);
     }
 
@@ -735,8 +805,8 @@ public sealed class MainViewModel : ObservableObject
         SelectedEntry = entry;
         var response = System.Windows.MessageBox.Show(
             _ownerProvider(),
-            $"Remove \"{entry.DisplayName}\" from the catalog?",
-            "Delete entry",
+            _localizer.Format("Catalog.Warning.RemoveConfirm", entry.DisplayName),
+            _localizer.Get("Catalog.Warning.RemoveTitle"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
@@ -748,7 +818,7 @@ public sealed class MainViewModel : ObservableObject
         Entries.Remove(entry);
         SelectedEntry = null;
         _iconCacheService.RemoveIcon(entry);
-        await PersistAsync("Entry deleted. Files on disk were not changed.");
+        await PersistAsync(_localizer.Get("Catalog.Message.EntryDeleted"));
     }
 
     private async Task OpenEntryAsync(object? parameter)
@@ -783,9 +853,9 @@ public sealed class MainViewModel : ObservableObject
                 RaiseCatalogStatsChanged();
             }
 
-            var message = $"Cannot open {entry.DisplayName}: path not found.";
+            var message = _localizer.Format("Catalog.Warning.PathNotFound", entry.DisplayName);
             StatusMessage = message;
-            System.Windows.MessageBox.Show(_ownerProvider(), message, "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(_ownerProvider(), message, _localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -802,13 +872,13 @@ public sealed class MainViewModel : ObservableObject
 
             _launcherService.Open(entry);
             entry.LastOpened = DateTime.Now;
-            await PersistAsync($"Opened {entry.DisplayName}.");
+            await PersistAsync(_localizer.Format("Catalog.Message.OpenedEntry", entry.DisplayName));
         }
         catch (Exception ex)
         {
-            var message = $"Cannot open {entry.DisplayName}: {ex.Message}";
+            var message = _localizer.Format("Catalog.Warning.OpenFailed", entry.DisplayName, ex.Message);
             StatusMessage = message;
-            System.Windows.MessageBox.Show(_ownerProvider(), message, "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(_ownerProvider(), message, _localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 
@@ -822,11 +892,11 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             _launcherService.OpenContainingFolder(SelectedEntry);
-            StatusMessage = "Opened location in File Explorer.";
+            StatusMessage = _localizer.Get("Catalog.Message.OpenedExplorer");
         }
         catch (Exception ex)
         {
-            ShowWarning($"Windows could not reveal this item. {ex.Message}");
+            ShowWarning(_localizer.Format("Catalog.Warning.RevealFailed", ex.Message));
         }
     }
 
@@ -846,7 +916,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         System.Windows.Clipboard.SetText(SelectedEntry.PrimaryPath);
-        StatusMessage = "Full path copied.";
+        StatusMessage = _localizer.Get("Catalog.Message.CopiedFullPath");
     }
 
     private async Task RefreshAsync()
@@ -854,7 +924,7 @@ public sealed class MainViewModel : ObservableObject
         var selectedEntryId = SelectedEntry?.Id;
         _searchRefreshCts?.Cancel();
         _missingStateRefreshCts?.Cancel();
-        StatusMessage = "Refreshing catalog...";
+        StatusMessage = _localizer.Get("Catalog.Message.Refreshing");
 
         try
         {
@@ -891,12 +961,12 @@ public sealed class MainViewModel : ObservableObject
             await RefreshSearchImmediatelyAsync();
             RaiseCatalogStatsChanged();
             QueueLazyIconLoad(refreshedEntries);
-            StatusMessage = "Catalog refreshed.";
+            StatusMessage = _localizer.Get("Catalog.Message.Refreshed");
         }
         catch (Exception ex)
         {
             AppLogger.WriteCrash(ex, "Refreshing catalog", isTerminating: false);
-            StatusMessage = "Refresh failed.";
+            StatusMessage = _localizer.Get("Catalog.Message.RefreshFailed");
         }
     }
 
@@ -909,7 +979,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         entry.IsFavorite = !entry.IsFavorite;
-        await PersistAsync(entry.IsFavorite ? "Pinned to favorites." : "Removed from favorites.");
+        await PersistAsync(entry.IsFavorite ? _localizer.Get("Catalog.Message.PinnedFavorite") : _localizer.Get("Catalog.Message.UnpinnedFavorite"));
     }
 
     private void OpenEverythingResult(object? parameter)
@@ -922,11 +992,11 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             _launcherService.OpenPath(result.FullPath, result.IsFolder);
-            StatusMessage = $"Opened {result.DisplayName}.";
+            StatusMessage = _localizer.Format("Catalog.Message.OpenedEntry", result.DisplayName);
         }
         catch (Exception ex)
         {
-            ShowWarning($"Windows could not open this item. {ex.Message}");
+            ShowWarning(_localizer.Format("Catalog.Warning.OpenPathFailed", ex.Message));
         }
     }
 
@@ -952,11 +1022,11 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             _launcherService.OpenContainingPath(result.FullPath, result.IsFolder);
-            StatusMessage = "Opened location in File Explorer.";
+            StatusMessage = _localizer.Get("Catalog.Message.OpenedExplorer");
         }
         catch (Exception ex)
         {
-            ShowWarning($"Windows could not reveal this item. {ex.Message}");
+            ShowWarning(_localizer.Format("Catalog.Warning.RevealFailed", ex.Message));
         }
     }
 
@@ -968,7 +1038,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         System.Windows.Clipboard.SetText(result.FullPath);
-        StatusMessage = "Full path copied.";
+        StatusMessage = _localizer.Get("Catalog.Message.CopiedFullPath");
     }
 
     private async Task AddEverythingResultAsync(object? parameter)
@@ -980,7 +1050,7 @@ public sealed class MainViewModel : ObservableObject
 
         if (HasDuplicatePath(result.FullPath))
         {
-            ShowWarning("That path is already saved in the catalog.");
+            ShowWarning(_localizer.Get("Catalog.Warning.PathAlreadySaved"));
             return;
         }
 
@@ -996,13 +1066,13 @@ public sealed class MainViewModel : ObservableObject
 
         if (HasDuplicatePath(editedEntry.PrimaryPath))
         {
-            ShowWarning("That path is already saved in the catalog.");
+            ShowWarning(_localizer.Get("Catalog.Warning.PathAlreadySaved"));
             return;
         }
 
         _pathValidationService.RefreshMissingState(editedEntry);
         Entries.Add(editedEntry);
-        await PersistAsync("Everything result saved.");
+        await PersistAsync(_localizer.Get("Catalog.Message.EverythingSaved"));
         QueueLazyIconLoad(editedEntry);
     }
 
@@ -1019,11 +1089,11 @@ public sealed class MainViewModel : ObservableObject
             return false;
         }
 
-        var matchesFilter = SelectedNoteFilter switch
+        var matchesFilter = SelectedNoteFilterOption.Value switch
         {
-            "Favorites" => note.IsFavorite,
-            "Recent" => note.LastViewedAt.HasValue,
-            "Tagged" => note.HasTags,
+            NoteFilterMode.Favorites => note.IsFavorite,
+            NoteFilterMode.Recent => note.LastViewedAt.HasValue,
+            NoteFilterMode.Tagged => note.HasTags,
             _ => true
         };
 
@@ -1084,7 +1154,7 @@ public sealed class MainViewModel : ObservableObject
         StatusMessage = message;
     }
 
-    private async Task SaveSettingsAsync(string failureMessage)
+    private async Task SaveSettingsAsync(string failureKey)
     {
         try
         {
@@ -1093,7 +1163,7 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppLogger.WriteCrash(ex, "Saving settings", isTerminating: false);
-            StatusMessage = failureMessage;
+            StatusMessage = _localizer.Get(failureKey);
         }
     }
 
@@ -1217,6 +1287,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(EverythingInfoMessage));
         OnPropertyChanged(nameof(ShowEmptyCatalogState));
         OnPropertyChanged(nameof(EverythingStatusText));
+        OnPropertyChanged(nameof(EverythingResultCountText));
     }
 
     private void QueueMissingStateRefresh(IReadOnlyList<CatalogEntry> entries)
@@ -1242,7 +1313,7 @@ public sealed class MainViewModel : ObservableObject
 
         try
         {
-            StatusMessage = "Checking paths in background...";
+            StatusMessage = _localizer.Get("Catalog.Message.PathCheckRunning");
 
             var changedStates = await Task.Run(() =>
             {
@@ -1268,7 +1339,7 @@ public sealed class MainViewModel : ObservableObject
             if (changedStates.Count == 0)
             {
                 RaiseCatalogStatsChanged();
-                StatusMessage = "Path check complete.";
+                StatusMessage = _localizer.Get("Catalog.Message.PathCheckComplete");
                 return;
             }
 
@@ -1284,7 +1355,7 @@ public sealed class MainViewModel : ObservableObject
             await _repository.SaveAsync(Entries, _repository.Settings);
             await RefreshSearchImmediatelyAsync();
             RaiseCatalogStatsChanged();
-            StatusMessage = "Path check updated missing items.";
+            StatusMessage = _localizer.Get("Catalog.Message.PathCheckUpdated");
         }
         catch (OperationCanceledException)
         {
@@ -1293,7 +1364,7 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppLogger.WriteCrash(ex, "Checking paths in background", isTerminating: false);
-            StatusMessage = "Path check failed.";
+            StatusMessage = _localizer.Get("Catalog.Message.PathCheckFailed");
         }
     }
 
@@ -1486,7 +1557,7 @@ public sealed class MainViewModel : ObservableObject
                 RefreshNotesView();
                 if (updateStatus)
                 {
-                    StatusMessage = $"Saved \"{note.DisplayTitle}\".";
+                    StatusMessage = _localizer.Format("Note.Message.Saved", note.DisplayTitle);
                 }
             }, DispatcherPriority.Background, cancellationToken);
         }
@@ -1497,7 +1568,7 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             AppLogger.WriteCrash(ex, "Saving note", isTerminating: false);
-            StatusMessage = $"Could not save \"{note.DisplayTitle}\".";
+            StatusMessage = _localizer.Format("Note.Message.SaveFailed", note.DisplayTitle);
         }
     }
 
@@ -1517,7 +1588,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    private static IReadOnlyList<NotePreviewLine> ParsePreviewLines(string body)
+    private IReadOnlyList<NotePreviewLine> ParsePreviewLines(string body)
     {
         if (string.IsNullOrWhiteSpace(body))
         {
@@ -1525,7 +1596,7 @@ public sealed class MainViewModel : ObservableObject
             [
                 new NotePreviewLine
                 {
-                    Text = "Start typing to see a simple read preview here.",
+                    Text = _localizer.Get("Note.Preview.Placeholder"),
                     Opacity = 0.7
                 }
             ];
@@ -1600,7 +1671,7 @@ public sealed class MainViewModel : ObservableObject
             .Length;
     }
 
-    private static string GetChecklistSummaryText(string text)
+    private string GetChecklistSummaryText(string text)
     {
         var total = 0;
         var completed = 0;
@@ -1620,8 +1691,8 @@ public sealed class MainViewModel : ObservableObject
         }
 
         return total == 0
-            ? "No checklist items"
-            : $"{completed}/{total} checklist items done";
+            ? _localizer.Get("Task.Checklist.None")
+            : _localizer.Format("Task.Checklist.Summary", completed, total);
     }
 
     private static string NormalizePath(string? path)
@@ -1646,6 +1717,58 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(HasNoNotes));
         OnPropertyChanged(nameof(ShowNoMatchingNotesState));
         OnPropertyChanged(nameof(NoteResultCountText));
+    }
+
+    private void ApplyStoredLanguage()
+    {
+        _localizer.SetLanguage(_repository.Settings.LanguageCode);
+        _selectedLanguage = Languages.FirstOrDefault(language => language.Code == _repository.Settings.LanguageCode)
+            ?? Languages[0];
+        OnPropertyChanged(nameof(SelectedLanguage));
+        OnPropertyChanged(nameof(CurrentLanguageButtonText));
+    }
+
+    private void RefreshLocalizedState()
+    {
+        foreach (var entry in Entries)
+        {
+            entry.RefreshLocalizedProperties();
+        }
+
+        foreach (var task in Tasks)
+        {
+            task.RefreshLocalizedProperties();
+        }
+
+        foreach (var note in Notes)
+        {
+            note.RefreshLocalizedProperties();
+        }
+
+        foreach (var result in EverythingResults)
+        {
+            result.RefreshLocalizedProperties();
+        }
+
+        LoadingMessage = IsLoading ? _localizer.Get("Common.LoadingData") : LoadingMessage;
+        RefreshPreviewLines();
+        RaiseCatalogStatsChanged();
+        RaiseSearchResultPropertiesChanged();
+        RaiseNoteStatsChanged();
+        RaiseSelectedNotePropertiesChanged();
+        OnPropertyChanged(nameof(QuickSearchHotkeyToolTip));
+        OnPropertyChanged(nameof(CurrentLanguageButtonText));
+        OnPropertyChanged(nameof(ResultCountText));
+        OnPropertyChanged(nameof(NoteResultCountText));
+    }
+
+    private void ToggleLanguage()
+    {
+        var nextCode = string.Equals(SelectedLanguage.Code, "ja", StringComparison.OrdinalIgnoreCase)
+            ? "en"
+            : "ja";
+        var nextLanguage = Languages.First(language => string.Equals(language.Code, nextCode, StringComparison.OrdinalIgnoreCase));
+        SelectedLanguage = nextLanguage;
     }
 
     private void RaiseSelectedEntryCommandsChanged()
@@ -1677,6 +1800,6 @@ public sealed class MainViewModel : ObservableObject
     private void ShowWarning(string message)
     {
         StatusMessage = message;
-        System.Windows.MessageBox.Show(_ownerProvider(), message, "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+        System.Windows.MessageBox.Show(_ownerProvider(), message, _localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

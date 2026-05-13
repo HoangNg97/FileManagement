@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using LauncherCatalog.Services;
 
 namespace LauncherCatalog.Models;
 
@@ -142,13 +143,15 @@ public sealed class CatalogEntry : INotifyPropertyChanged
         set => SetField(ref _iconPath, value);
     }
 
-    public string TypeLabel => Type == EntryType.App ? "App" : "Folder";
+    public string TypeLabel => Type == EntryType.App
+        ? LocalizationService.Current.Get("CatalogFilter.Apps")
+        : LocalizationService.Current.Get("Common.Folder");
     public string PrimaryPath => Type == EntryType.App ? ExePath ?? string.Empty : FolderPath;
     public string PrimaryPathPreview => PathPreviewFormatter.Truncate(PrimaryPath);
     public string FolderPathPreview => PathPreviewFormatter.Truncate(FolderPath);
-    public string TagsText => Tags.Count == 0 ? "No tags" : string.Join(", ", Tags);
-    public string LastOpenedText => LastOpened?.ToString("MMM d, yyyy h:mm tt") ?? "Never";
-    public string DateAddedText => DateAdded.ToString("MMM d, yyyy h:mm tt");
+    public string TagsText => Tags.Count == 0 ? LocalizationService.Current.Get("Common.NoTags") : string.Join(", ", Tags);
+    public string LastOpenedText => LastOpened?.ToString("g") ?? LocalizationService.Current.Get("Common.Never");
+    public string DateAddedText => DateAdded.ToString("g");
 
     public CatalogEntry Clone()
     {
@@ -194,6 +197,14 @@ public sealed class CatalogEntry : INotifyPropertyChanged
         OnPropertyChanged(nameof(PrimaryPath));
         OnPropertyChanged(nameof(PrimaryPathPreview));
         OnPropertyChanged(nameof(FolderPathPreview));
+    }
+
+    public void RefreshLocalizedProperties()
+    {
+        OnPropertyChanged(nameof(TypeLabel));
+        OnPropertyChanged(nameof(TagsText));
+        OnPropertyChanged(nameof(LastOpenedText));
+        OnPropertyChanged(nameof(DateAddedText));
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

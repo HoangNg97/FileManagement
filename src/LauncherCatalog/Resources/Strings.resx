@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Common.AppName" xml:space="preserve"><value>Launcher Catalog</value></data>
+  <data name="Common.Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Common.LoadingData" xml:space="preserve"><value>Loading data</value></data>
+  <data name="Common.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common.Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Common.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Common.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Common.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common.Browse" xml:space="preserve"><value>Browse</value></data>
+  <data name="Common.File" xml:space="preserve"><value>File</value></data>
+  <data name="Common.Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Common.Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="Common.Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Common.FullPath" xml:space="preserve"><value>Full path</value></data>
+  <data name="Common.Added" xml:space="preserve"><value>Added</value></data>
+  <data name="Common.Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Common.Updated" xml:space="preserve"><value>Updated</value></data>
+  <data name="Common.LastOpened" xml:space="preserve"><value>Last opened</value></data>
+  <data name="Common.LastViewed" xml:space="preserve"><value>Last viewed</value></data>
+  <data name="Common.Words" xml:space="preserve"><value>Words</value></data>
+  <data name="Common.Checklist" xml:space="preserve"><value>Checklist</value></data>
+  <data name="Common.Never" xml:space="preserve"><value>Never</value></data>
+  <data name="Common.NoTags" xml:space="preserve"><value>No tags</value></data>
+  <data name="Common.NoContentYet" xml:space="preserve"><value>No content yet</value></data>
+  <data name="Common.UntitledNote" xml:space="preserve"><value>Untitled note</value></data>
+  <data name="Common.ToggleDarkMode" xml:space="preserve"><value>Toggle dark mode</value></data>
+  <data name="Common.Favorite" xml:space="preserve"><value>Favorite</value></data>
+  <data name="Common.ToggleFavorite" xml:space="preserve"><value>Toggle favorite</value></data>
+  <data name="Common.CopyFullPath" xml:space="preserve"><value>Copy full path</value></data>
+  <data name="Common.RevealInExplorer" xml:space="preserve"><value>Reveal in Explorer</value></data>
+  <data name="Common.SearchEllipsis" xml:space="preserve"><value>Search...</value></data>
+  <data name="Main.Tab.Catalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="Main.Tab.Tasks" xml:space="preserve"><value>Tasks</value></data>
+  <data name="Main.Tab.Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Main.Action.AddApp" xml:space="preserve"><value>Add App</value></data>
+  <data name="Main.Action.AddFolder" xml:space="preserve"><value>Add Folder</value></data>
+  <data name="Main.Action.AddToCatalog" xml:space="preserve"><value>Add to catalog</value></data>
+  <data name="Main.Action.RefreshCatalog" xml:space="preserve"><value>Refresh catalog</value></data>
+  <data name="Main.Action.CreateTask" xml:space="preserve"><value>Create New Task</value></data>
+  <data name="Main.Action.NewNote" xml:space="preserve"><value>New Note</value></data>
+  <data name="Main.Action.RemoveFromCatalog" xml:space="preserve"><value>Remove from catalog</value></data>
+  <data name="Main.Placeholder.SearchNotes" xml:space="preserve"><value>Search notes by title, content, or tags</value></data>
+  <data name="Main.Placeholder.NoteTitle" xml:space="preserve"><value>Note title</value></data>
+  <data name="Main.Placeholder.NoteTags" xml:space="preserve"><value>Tags, for example work, ideas, urgent</value></data>
+  <data name="Main.Placeholder.NoteBody" xml:space="preserve"><value>Write your note here. You can use headings and checklist lines like - [ ] or - [x].</value></data>
+  <data name="Main.Tooltip.AddApplication" xml:space="preserve"><value>Add application</value></data>
+  <data name="Main.Tooltip.AddFolder" xml:space="preserve"><value>Add folder</value></data>
+  <data name="Main.Tooltip.SearchNotes" xml:space="preserve"><value>Search note title, content, or tags</value></data>
+  <data name="Main.Tooltip.NoteTitle" xml:space="preserve"><value>Note title</value></data>
+  <data name="Main.Tooltip.NoteTags" xml:space="preserve"><value>Comma-separated tags, for example work, ideas, urgent</value></data>
+  <data name="Main.Tooltip.NoteBody" xml:space="preserve"><value>Write your note here. Checklist lines such as - [ ] and - [x] are recognized in preview.</value></data>
+  <data name="Main.QuickSearchTooltip" xml:space="preserve"><value>Quick search shortcut: {0}</value></data>
+  <data name="Main.ResultCount.EverythingOnly" xml:space="preserve"><value>{0} Everything result(s)</value></data>
+  <data name="Main.ResultCount.Both" xml:space="preserve"><value>{0} catalog, {1} Everything of {2} saved</value></data>
+  <data name="Main.ResultCount.CatalogOnly" xml:space="preserve"><value>{0} of {1} saved</value></data>
+  <data name="Main.Everything.Info.NoResultsTitle" xml:space="preserve"><value>No Everything results</value></data>
+  <data name="Main.Everything.Info.StartingTitle" xml:space="preserve"><value>Everything starting</value></data>
+  <data name="Main.Everything.Info.UnavailableTitle" xml:space="preserve"><value>Everything unavailable</value></data>
+  <data name="Main.Everything.Info.NoResultsMessage" xml:space="preserve"><value>No filesystem matches were found for this search.</value></data>
+  <data name="Main.Everything.Info.StartingMessage" xml:space="preserve"><value>Catalog search still works. The bundled Everything search engine may still be starting.</value></data>
+  <data name="Main.Everything.Info.UnavailableMessage" xml:space="preserve"><value>Catalog search still works. Bundle or install Everything to include filesystem matches here.</value></data>
+  <data name="Main.Everything.Status.Results" xml:space="preserve"><value>Everything results</value></data>
+  <data name="Main.Everything.Status.Starting" xml:space="preserve"><value>Everything starting</value></data>
+  <data name="Main.Everything.Status.Unavailable" xml:space="preserve"><value>Everything unavailable</value></data>
+  <data name="Main.Everything.Count" xml:space="preserve"><value>{0} result(s)</value></data>
+  <data name="Main.EmptyCatalog.Title" xml:space="preserve"><value>No saved items yet</value></data>
+  <data name="Main.EmptyCatalog.Message" xml:space="preserve"><value>Add an app or folder to create your searchable launcher list.</value></data>
+  <data name="Main.EmptySelection.Title" xml:space="preserve"><value>Select an item</value></data>
+  <data name="Main.EmptySelection.Message" xml:space="preserve"><value>Details and actions appear here.</value></data>
+  <data name="Main.Note.Title" xml:space="preserve"><value>Notes</value></data>
+  <data name="Main.Note.Count.One" xml:space="preserve"><value>1 note</value></data>
+  <data name="Main.Note.Count.Many" xml:space="preserve"><value>{0} notes</value></data>
+  <data name="Main.Note.EmptyTitle" xml:space="preserve"><value>No notes yet</value></data>
+  <data name="Main.Note.EmptyMessage" xml:space="preserve"><value>Create your first note to start writing, pin favorites, and search later.</value></data>
+  <data name="Main.Note.EditorTitle" xml:space="preserve"><value>Editor</value></data>
+  <data name="Main.Note.ChooseTitle" xml:space="preserve"><value>Choose a note</value></data>
+  <data name="Main.Note.ChooseMessage" xml:space="preserve"><value>Pick an existing note from the list or create a new one to start editing.</value></data>
+  <data name="Main.Note.PreviewTitle" xml:space="preserve"><value>Preview</value></data>
+  <data name="Main.Note.PreviewSubtitle" xml:space="preserve"><value>Read mode with simple checklist and heading support</value></data>
+  <data name="Main.Note.PreviewEmptyTitle" xml:space="preserve"><value>Preview will appear here</value></data>
+  <data name="Main.Note.PreviewEmptyMessage" xml:space="preserve"><value>Once a note is selected, this panel shows a simple read view plus note details.</value></data>
+  <data name="Main.Loading" xml:space="preserve"><value>Loading data</value></data>
+  <data name="CatalogFilter.All" xml:space="preserve"><value>All</value></data>
+  <data name="CatalogFilter.Apps" xml:space="preserve"><value>Apps</value></data>
+  <data name="CatalogFilter.Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="CatalogFilter.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="CatalogSearchSource.Catalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="CatalogSearchSource.Everything" xml:space="preserve"><value>Everything</value></data>
+  <data name="CatalogSearchSource.Both" xml:space="preserve"><value>Catalog + Everything</value></data>
+  <data name="CatalogSort.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="CatalogSort.Type" xml:space="preserve"><value>Type</value></data>
+  <data name="CatalogSort.RecentlyAdded" xml:space="preserve"><value>Recently added</value></data>
+  <data name="CatalogSort.LastOpened" xml:space="preserve"><value>Last opened</value></data>
+  <data name="Catalog.Message.Loaded" xml:space="preserve"><value>Loaded {0} saved item(s).</value></data>
+  <data name="Catalog.Message.EmptyReady" xml:space="preserve"><value>Ready. Add an app or folder to begin.</value></data>
+  <data name="Catalog.Message.Refreshing" xml:space="preserve"><value>Refreshing catalog...</value></data>
+  <data name="Catalog.Message.Refreshed" xml:space="preserve"><value>Catalog refreshed.</value></data>
+  <data name="Catalog.Message.RefreshFailed" xml:space="preserve"><value>Refresh failed.</value></data>
+  <data name="Catalog.Message.AppSaved" xml:space="preserve"><value>App saved.</value></data>
+  <data name="Catalog.Message.FolderSaved" xml:space="preserve"><value>Folder saved.</value></data>
+  <data name="Catalog.Message.EntryUpdated" xml:space="preserve"><value>Entry updated.</value></data>
+  <data name="Catalog.Message.EntryDeleted" xml:space="preserve"><value>Entry deleted. Files on disk were not changed.</value></data>
+  <data name="Catalog.Message.OpenedEntry" xml:space="preserve"><value>Opened {0}.</value></data>
+  <data name="Catalog.Message.OpenedExplorer" xml:space="preserve"><value>Opened location in File Explorer.</value></data>
+  <data name="Catalog.Message.CopiedFullPath" xml:space="preserve"><value>Full path copied.</value></data>
+  <data name="Catalog.Message.PinnedFavorite" xml:space="preserve"><value>Pinned to favorites.</value></data>
+  <data name="Catalog.Message.UnpinnedFavorite" xml:space="preserve"><value>Removed from favorites.</value></data>
+  <data name="Catalog.Message.EverythingSaved" xml:space="preserve"><value>Everything result saved.</value></data>
+  <data name="Catalog.Message.PathCheckRunning" xml:space="preserve"><value>Checking paths in background...</value></data>
+  <data name="Catalog.Message.PathCheckComplete" xml:space="preserve"><value>Path check complete.</value></data>
+  <data name="Catalog.Message.PathCheckUpdated" xml:space="preserve"><value>Path check updated missing items.</value></data>
+  <data name="Catalog.Message.PathCheckFailed" xml:space="preserve"><value>Path check failed.</value></data>
+  <data name="Catalog.Warning.ChooseFile" xml:space="preserve"><value>Please choose a file.</value></data>
+  <data name="Catalog.Warning.PathAlreadySaved" xml:space="preserve"><value>That path is already saved in the catalog.</value></data>
+  <data name="Catalog.Warning.FolderAlreadySaved" xml:space="preserve"><value>That folder is already saved in the catalog.</value></data>
+  <data name="Catalog.Warning.PathUsedByAnother" xml:space="preserve"><value>Another saved item already uses that path.</value></data>
+  <data name="Catalog.Warning.RemoveConfirm" xml:space="preserve"><value>Remove "{0}" from the catalog?</value></data>
+  <data name="Catalog.Warning.RemoveTitle" xml:space="preserve"><value>Delete entry</value></data>
+  <data name="Catalog.Warning.PathNotFound" xml:space="preserve"><value>Cannot open {0}: path not found.</value></data>
+  <data name="Catalog.Warning.OpenFailed" xml:space="preserve"><value>Cannot open {0}: {1}</value></data>
+  <data name="Catalog.Warning.RevealFailed" xml:space="preserve"><value>Windows could not reveal this item. {0}</value></data>
+  <data name="Catalog.Warning.OpenPathFailed" xml:space="preserve"><value>Windows could not open this item. {0}</value></data>
+  <data name="Launcher.Error.SavedPathEmpty" xml:space="preserve"><value>The saved path is empty.</value></data>
+  <data name="Launcher.Error.PathEmpty" xml:space="preserve"><value>The path is empty.</value></data>
+  <data name="Task.Field.Title" xml:space="preserve"><value>Task</value></data>
+  <data name="Task.Field.DueDate" xml:space="preserve"><value>Due Date</value></data>
+  <data name="Task.Field.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Task.Field.Action" xml:space="preserve"><value>Action</value></data>
+  <data name="Task.Field.TaskTitle" xml:space="preserve"><value>Task Title</value></data>
+  <data name="Task.Field.Priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="Task.Filter.PriorityAll" xml:space="preserve"><value>Priority: All</value></data>
+  <data name="Task.Filter.PriorityHigh" xml:space="preserve"><value>Priority: High</value></data>
+  <data name="Task.Filter.PriorityMedium" xml:space="preserve"><value>Priority: Medium</value></data>
+  <data name="Task.Filter.PriorityLow" xml:space="preserve"><value>Priority: Low</value></data>
+  <data name="Task.Filter.DueAll" xml:space="preserve"><value>Due Date: All</value></data>
+  <data name="Task.Filter.DueWeek" xml:space="preserve"><value>Due: This week</value></data>
+  <data name="Task.Filter.DueMonth" xml:space="preserve"><value>Due: This month</value></data>
+  <data name="Task.Filter.Overdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="Task.Filter.StatusAll" xml:space="preserve"><value>Status: All</value></data>
+  <data name="Task.Filter.NotStarted" xml:space="preserve"><value>Not Started</value></data>
+  <data name="Task.Filter.InProgress" xml:space="preserve"><value>In Progress</value></data>
+  <data name="Task.Filter.NeedsReview" xml:space="preserve"><value>Needs Review</value></data>
+  <data name="Task.Filter.Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Task.Status.Todo" xml:space="preserve"><value>Todo</value></data>
+  <data name="Task.Status.Ongoing" xml:space="preserve"><value>On-going</value></data>
+  <data name="Task.Status.Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Task.Priority.Low" xml:space="preserve"><value>Low</value></data>
+  <data name="Task.Priority.Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Task.Priority.Urgent" xml:space="preserve"><value>Urgent</value></data>
+  <data name="Task.Message.Created" xml:space="preserve"><value>Task created.</value></data>
+  <data name="Task.Message.Updated" xml:space="preserve"><value>Task "{0}" updated.</value></data>
+  <data name="Task.Message.StatusUpdated" xml:space="preserve"><value>Task "{0}" status updated.</value></data>
+  <data name="Task.Message.DueDateUpdated" xml:space="preserve"><value>Task "{0}" due date updated.</value></data>
+  <data name="Task.Message.Removed" xml:space="preserve"><value>Task "{0}" removed.</value></data>
+  <data name="Task.Message.NotificationsEnabled" xml:space="preserve"><value>Notifications enabled for "{0}".</value></data>
+  <data name="Task.Message.NotificationsDisabled" xml:space="preserve"><value>Notifications disabled for "{0}".</value></data>
+  <data name="Task.Message.RemoveFailed" xml:space="preserve"><value>The task could not be removed.</value></data>
+  <data name="Task.Notification.Enable" xml:space="preserve"><value>Enable task reminders</value></data>
+  <data name="Task.Notification.Disable" xml:space="preserve"><value>Disable task reminders</value></data>
+  <data name="Task.Dialog.CreateTitle" xml:space="preserve"><value>Create Task</value></data>
+  <data name="Task.Dialog.EditTitle" xml:space="preserve"><value>Edit Task</value></data>
+  <data name="Task.Dialog.CreateAction" xml:space="preserve"><value>Create</value></data>
+  <data name="Task.Dialog.EditAction" xml:space="preserve"><value>Edit</value></data>
+  <data name="Task.Dialog.CreateSubtitle" xml:space="preserve"><value>Add a new task for your tracker.</value></data>
+  <data name="Task.Dialog.EditSubtitle" xml:space="preserve"><value>Update the details for this task.</value></data>
+  <data name="Task.Dialog.ValidationTitle" xml:space="preserve"><value>Please enter task title.</value></data>
+  <data name="Task.Dialog.MarkCompleted" xml:space="preserve"><value>Mark as Completed</value></data>
+  <data name="Task.Reminder.UrgentTitle" xml:space="preserve"><value>Urgent Task Reminder</value></data>
+  <data name="Task.Reminder.NormalTitle" xml:space="preserve"><value>Task Reminder</value></data>
+  <data name="Task.Reminder.LowTitle" xml:space="preserve"><value>Low Priority Reminder</value></data>
+  <data name="Task.Reminder.NoDueDate" xml:space="preserve"><value>No due date set.</value></data>
+  <data name="Task.Reminder.DueDate" xml:space="preserve"><value>Due {0}.</value></data>
+  <data name="Task.Reminder.Message" xml:space="preserve"><value>{0} is {1} and marked {2}. {3}</value></data>
+  <data name="Task.Checklist.None" xml:space="preserve"><value>No checklist items</value></data>
+  <data name="Task.Checklist.Summary" xml:space="preserve"><value>{0}/{1} checklist items done</value></data>
+  <data name="Task.WordCount" xml:space="preserve"><value>{0} words</value></data>
+  <data name="Note.Message.Created" xml:space="preserve"><value>Note created.</value></data>
+  <data name="Note.Message.DeleteConfirm" xml:space="preserve"><value>Delete "{0}"?</value></data>
+  <data name="Note.Message.DeleteTitle" xml:space="preserve"><value>Delete note</value></data>
+  <data name="Note.Message.Deleted" xml:space="preserve"><value>Note "{0}" deleted.</value></data>
+  <data name="Note.Message.FavoriteAdded" xml:space="preserve"><value>Added "{0}" to favorites.</value></data>
+  <data name="Note.Message.FavoriteRemoved" xml:space="preserve"><value>Removed "{0}" from favorites.</value></data>
+  <data name="Note.Message.Saved" xml:space="preserve"><value>Saved "{0}".</value></data>
+  <data name="Note.Message.SaveFailed" xml:space="preserve"><value>Could not save "{0}".</value></data>
+  <data name="Note.Preview.Placeholder" xml:space="preserve"><value>Start typing to see a simple read preview here.</value></data>
+  <data name="NoteFilter.Favorites" xml:space="preserve"><value>Favorites</value></data>
+  <data name="NoteFilter.Recent" xml:space="preserve"><value>Recent</value></data>
+  <data name="NoteFilter.Tagged" xml:space="preserve"><value>Tagged</value></data>
+  <data name="Entry.Dialog.AppTitle" xml:space="preserve"><value>App entry</value></data>
+  <data name="Entry.Dialog.FolderTitle" xml:space="preserve"><value>Folder entry</value></data>
+  <data name="Entry.Dialog.PathLabelFile" xml:space="preserve"><value>File path</value></data>
+  <data name="Entry.Dialog.PathLabelFolder" xml:space="preserve"><value>Folder path</value></data>
+  <data name="Entry.Dialog.Subtitle" xml:space="preserve"><value>Save searchable details for this item.</value></data>
+  <data name="Entry.Dialog.DisplayName" xml:space="preserve"><value>Display name</value></data>
+  <data name="Entry.Dialog.FileName" xml:space="preserve"><value>File name</value></data>
+  <data name="Entry.Dialog.FolderName" xml:space="preserve"><value>Folder name</value></data>
+  <data name="Entry.Dialog.ValidationDisplayName" xml:space="preserve"><value>Please enter a display name.</value></data>
+  <data name="Entry.Dialog.ValidationPath" xml:space="preserve"><value>Please choose a path.</value></data>
+  <data name="Entry.Dialog.ValidationFilePath" xml:space="preserve"><value>Please choose a file path.</value></data>
+  <data name="QuickSearch.Title" xml:space="preserve"><value>Quick Search</value></data>
+  <data name="QuickSearch.Source.Catalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="QuickSearch.Source.Everything" xml:space="preserve"><value>Everything</value></data>
+  <data name="Settings.Hotkey.Title" xml:space="preserve"><value>Quick Search Shortcut</value></data>
+  <data name="Settings.Hotkey.Heading" xml:space="preserve"><value>Quick search shortcut</value></data>
+  <data name="Settings.Hotkey.Subtitle" xml:space="preserve"><value>Press the key combination to use.</value></data>
+  <data name="Settings.Hotkey.Invalid" xml:space="preserve"><value>That shortcut could not be registered.</value></data>
+  <data name="Settings.Hotkey.Updated" xml:space="preserve"><value>Quick search shortcut set to {0}.</value></data>
+  <data name="Settings.Hotkey.SaveFailed" xml:space="preserve"><value>Shortcut changed, but saving the setting failed.</value></data>
+  <data name="Settings.Hotkey.InUse" xml:space="preserve"><value>Could not register quick search shortcut {0}. Another app may already use it.</value></data>
+  <data name="Settings.Theme.SaveFailed" xml:space="preserve"><value>Theme changed, but saving the setting failed.</value></data>
+  <data name="Settings.Theme.DarkEnabled" xml:space="preserve"><value>Dark mode enabled.</value></data>
+  <data name="Settings.Theme.LightEnabled" xml:space="preserve"><value>Light mode enabled.</value></data>
+  <data name="Settings.Language.Updated" xml:space="preserve"><value>Language changed to {0}.</value></data>
+  <data name="Settings.Language.SaveFailed" xml:space="preserve"><value>Language changed, but saving the setting failed.</value></data>
+  <data name="Picker.SelectFile" xml:space="preserve"><value>Select file to open</value></data>
+  <data name="Picker.AllFiles" xml:space="preserve"><value>All files (*.*)|*.*</value></data>
+  <data name="Picker.SelectFolder" xml:space="preserve"><value>Select folder</value></data>
+  <data name="Tray.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Tray.Quit" xml:space="preserve"><value>Quit</value></data>
+  <data name="MissingStatus.Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="MissingStatus.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Everything.Type.File" xml:space="preserve"><value>Everything file</value></data>
+  <data name="Everything.Type.Folder" xml:space="preserve"><value>Everything folder</value></data>
+  <data name="Everything.SavedStatus.Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="Everything.SavedStatus.Everything" xml:space="preserve"><value>Everything</value></data>
+  <data name="Language.English" xml:space="preserve"><value>English</value></data>
+  <data name="Language.Japanese" xml:space="preserve"><value>Japanese</value></data>
+</root>

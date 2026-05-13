@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using LauncherCatalog.Services;
 
 namespace LauncherCatalog.Models;
 
@@ -101,7 +102,7 @@ public sealed class NoteItem : INotifyPropertyChanged
         }
     }
 
-    public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? "Untitled note" : Title.Trim();
+    public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? LocalizationService.Current.Get("Common.UntitledNote") : Title.Trim();
 
     public string BodyPreview
     {
@@ -114,7 +115,7 @@ public sealed class NoteItem : INotifyPropertyChanged
 
             if (string.IsNullOrWhiteSpace(line))
             {
-                return "No content yet";
+                return LocalizationService.Current.Get("Common.NoContentYet");
             }
 
             return line.Length <= 96 ? line : $"{line[..93]}...";
@@ -123,13 +124,23 @@ public sealed class NoteItem : INotifyPropertyChanged
 
     public bool HasTags => Tags.Count > 0;
 
-    public string TagsText => Tags.Count == 0 ? "No tags" : string.Join(", ", Tags);
+    public string TagsText => Tags.Count == 0 ? LocalizationService.Current.Get("Common.NoTags") : string.Join(", ", Tags);
 
-    public string CreatedAtText => CreatedAt.ToString("MMM d, yyyy h:mm tt");
+    public string CreatedAtText => CreatedAt.ToString("g");
 
-    public string UpdatedAtText => UpdatedAt.ToString("MMM d, yyyy h:mm tt");
+    public string UpdatedAtText => UpdatedAt.ToString("g");
 
-    public string LastViewedAtText => LastViewedAt?.ToString("MMM d, yyyy h:mm tt") ?? "Never";
+    public string LastViewedAtText => LastViewedAt?.ToString("g") ?? LocalizationService.Current.Get("Common.Never");
+
+    public void RefreshLocalizedProperties()
+    {
+        OnPropertyChanged(nameof(DisplayTitle));
+        OnPropertyChanged(nameof(BodyPreview));
+        OnPropertyChanged(nameof(TagsText));
+        OnPropertyChanged(nameof(CreatedAtText));
+        OnPropertyChanged(nameof(UpdatedAtText));
+        OnPropertyChanged(nameof(LastViewedAtText));
+    }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {

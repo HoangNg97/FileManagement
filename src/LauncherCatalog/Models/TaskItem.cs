@@ -1,6 +1,6 @@
 namespace LauncherCatalog.Models;
 
-public sealed class TaskItem
+public sealed class TaskItem : LauncherCatalog.ViewModels.ObservableObject
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -16,20 +16,27 @@ public sealed class TaskItem
     public DateTime UpdatedAt { get; set; }
     public int SortOrder { get; set; }
 
-    public string DueDateText => DueDate?.ToString("MMMM d, yyyy") ?? "-";
+    public string DueDateText => DueDate?.ToString("d") ?? "-";
     public string StatusText => Status switch
     {
-        TaskStatus.Todo => "Todo",
-        TaskStatus.Ongoing => "On-going",
-        TaskStatus.Done => "Done",
-        _ => "Todo"
+        TaskStatus.Todo => Services.LocalizationService.Current.Get("Task.Status.Todo"),
+        TaskStatus.Ongoing => Services.LocalizationService.Current.Get("Task.Status.Ongoing"),
+        TaskStatus.Done => Services.LocalizationService.Current.Get("Task.Status.Done"),
+        _ => Services.LocalizationService.Current.Get("Task.Status.Todo")
     };
 
     public string NotificationToolTip => NotificationsEnabled
-        ? "Disable task reminders"
-        : "Enable task reminders";
+        ? Services.LocalizationService.Current.Get("Task.Notification.Disable")
+        : Services.LocalizationService.Current.Get("Task.Notification.Enable");
 
     public string NotificationIcon => NotificationsEnabled
         ? "\uE7F4"
         : "\uE7ED";
+
+    public void RefreshLocalizedProperties()
+    {
+        OnPropertyChanged(nameof(DueDateText));
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(NotificationToolTip));
+    }
 }

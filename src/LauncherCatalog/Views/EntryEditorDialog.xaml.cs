@@ -44,7 +44,7 @@ public partial class EntryEditorDialog : Window
     {
         if (!_viewModel.Validate(out var message))
         {
-            System.Windows.MessageBox.Show(this, message, "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, message, LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

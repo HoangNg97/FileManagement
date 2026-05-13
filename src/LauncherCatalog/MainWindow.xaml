@@ -2,9 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:LauncherCatalog.Converters"
+        xmlns:loc="clr-namespace:LauncherCatalog.Services"
         xmlns:models="clr-namespace:LauncherCatalog.Models"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="Launcher Catalog"
+        Title="{loc:Loc Common.AppName}"
         Width="1180"
         Height="760"
         MinWidth="980"
@@ -34,6 +35,14 @@
 
         <Style x:Key="CardActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource IconButtonStyle}">
             <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+
+        <Style x:Key="TitleBarLanguageButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Width" Value="58" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
         <Style x:Key="AskGeminiTitleButtonStyle" TargetType="{x:Type Button}">
@@ -81,7 +90,7 @@
         </Style>
 
         <DataTemplate x:Key="CenteredDropdownTextTemplate">
-            <TextBlock Text="{Binding}"
+            <TextBlock Text="{Binding DisplayText}"
                        Foreground="{DynamicResource StrongTextBrush}"
                        HorizontalAlignment="Left"
                        VerticalAlignment="Center"
@@ -165,22 +174,22 @@
                                 Command="{Binding DataContext.AddEverythingResultCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}"
                                 Content="&#xE710;"
-                                ToolTip="Add to catalog" />
+                                ToolTip="{loc:Loc Main.Action.AddToCatalog}" />
                         <Button Style="{StaticResource CardActionButtonStyle}"
                                 Command="{Binding DataContext.OpenEverythingResultCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}"
                                 Content="&#xE768;"
-                                ToolTip="Open" />
+                                ToolTip="{loc:Loc Common.Open}" />
                         <Button Style="{StaticResource CardActionButtonStyle}"
                                 Command="{Binding DataContext.RevealEverythingResultCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}"
                                 Content="&#xE838;"
-                                ToolTip="Reveal in Explorer" />
+                                ToolTip="{loc:Loc Common.RevealInExplorer}" />
                         <Button Style="{StaticResource IconButtonStyle}"
                                 Command="{Binding DataContext.CopyEverythingPathCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}"
                                 Content="&#xE8C8;"
-                                ToolTip="Copy full path" />
+                                ToolTip="{loc:Loc Common.CopyFullPath}" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -415,7 +424,7 @@
                 <StackPanel Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Margin="12,0,0,0">
-                    <TextBlock Text="Launcher Catalog"
+                    <TextBlock Text="{loc:Loc Common.AppName}"
                                Foreground="#FFF4EDE6"
                                FontWeight="SemiBold"
                                FontSize="13" />
@@ -426,8 +435,14 @@
                     <ToggleButton Style="{StaticResource SwitchButtonStyle}"
                                   IsChecked="{Binding IsDarkMode, Mode=TwoWay}"
                                   Margin="0,0,10,0"
-                                  ToolTip="Toggle dark mode"
+                                  ToolTip="{loc:Loc Common.ToggleDarkMode}"
                                   shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button Style="{StaticResource TitleBarLanguageButtonStyle}"
+                            Margin="0,0,10,0"
+                            Command="{Binding ToggleLanguageCommand}"
+                            Content="{Binding CurrentLanguageButtonText}"
+                            ToolTip="{loc:Loc Common.Language}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Width="46"
                             Height="44"
                             Background="Transparent"
@@ -465,7 +480,7 @@
             <TabControl.Resources>
                 <Style TargetType="{x:Type TabItem}" BasedOn="{StaticResource MainTabItemStyle}" />
             </TabControl.Resources>
-            <TabItem Header="Catalog">
+            <TabItem Header="{loc:Loc Main.Tab.Catalog}">
                 <Grid Margin="0,14,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -482,7 +497,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel>
-                <TextBlock Text="Launcher Catalog"
+                <TextBlock Text="{loc:Loc Common.AppName}"
                            FontSize="30"
                            FontWeight="SemiBold" />
                 <TextBlock Text="{Binding ResultCountText}"
@@ -502,7 +517,7 @@
                         Command="{Binding AddAppCommand}"
                         MinWidth="118"
                         Margin="0,0,10,0"
-                        ToolTip="Add application">
+                        ToolTip="{loc:Loc Main.Tooltip.AddApplication}">
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <TextBlock Text="&#xE710;"
@@ -512,7 +527,7 @@
                                    Foreground="White"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0" />
-                        <TextBlock Text="Add App"
+                        <TextBlock Text="{loc:Loc Main.Action.AddApp}"
                                    Foreground="White"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -520,7 +535,7 @@
                 <Button Style="{StaticResource SecondaryButtonStyle}"
                         Command="{Binding AddFolderCommand}"
                         MinWidth="132"
-                        ToolTip="Add folder">
+                        ToolTip="{loc:Loc Main.Tooltip.AddFolder}">
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <TextBlock Text="&#xE8B7;"
@@ -529,7 +544,7 @@
                                    LineHeight="16"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0" />
-                        <TextBlock Text="Add Folder"
+                        <TextBlock Text="{loc:Loc Main.Action.AddFolder}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -590,7 +605,7 @@
                                              Style="{StaticResource SearchTextBoxStyle}"
                                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                              PreviewKeyDown="SearchBox_PreviewKeyDown" />
-                                    <TextBlock Text="Search apps, folders, paths, tags, notes"
+                                    <TextBlock Text="{loc:Loc Common.SearchEllipsis}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                Margin="4,0,0,0"
                                                VerticalAlignment="Center"
@@ -602,21 +617,21 @@
 
                         <ComboBox Grid.Column="2"
                                   ItemsSource="{Binding SearchSources}"
-                                  SelectedItem="{Binding SelectedSearchSource}"
+                                  SelectedItem="{Binding SelectedSearchSourceOption}"
                                   ItemTemplate="{StaticResource CenteredDropdownTextTemplate}" />
                         <ComboBox Grid.Column="4"
                                   ItemsSource="{Binding Filters}"
-                                  SelectedItem="{Binding SelectedFilter}"
+                                  SelectedItem="{Binding SelectedFilterOption}"
                                   ItemTemplate="{StaticResource CenteredDropdownTextTemplate}" />
                         <ComboBox Grid.Column="6"
                                   ItemsSource="{Binding SortModes}"
-                                  SelectedItem="{Binding SelectedSort}"
+                                  SelectedItem="{Binding SelectedSortOption}"
                                   ItemTemplate="{StaticResource CenteredDropdownTextTemplate}" />
                         <Button Grid.Column="8"
                                 Style="{StaticResource IconButtonStyle}"
                                 Content="&#xE72C;"
                                 Command="{Binding RefreshCommand}"
-                                ToolTip="Refresh catalog" />
+                                ToolTip="{loc:Loc Main.Action.RefreshCatalog}" />
                     </Grid>
                 </Border>
 
@@ -736,7 +751,7 @@
                                                                        TextTrimming="CharacterEllipsis" />
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="2">
-                                                            <TextBlock Text="Folder"
+                                                            <TextBlock Text="{loc:Loc Common.Folder}"
                                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                                        FontSize="12"
                                                                        FontWeight="SemiBold" />
@@ -756,22 +771,22 @@
                                                             CommandParameter="{Binding}"
                                                             Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
                                                             Opacity="{Binding IsFavorite, Converter={StaticResource FavoriteOpacityConverter}}"
-                                                            ToolTip="Favorite" />
+                                                            ToolTip="{loc:Loc Common.Favorite}" />
                                                     <Button Style="{StaticResource CardActionButtonStyle}"
                                                             Command="{Binding DataContext.OpenEntryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             Content="&#xE768;"
-                                                            ToolTip="Open" />
+                                                            ToolTip="{loc:Loc Common.Open}" />
                                                     <Button Style="{StaticResource CardActionButtonStyle}"
                                                             Command="{Binding DataContext.EditEntryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             Content="&#xE70F;"
-                                                            ToolTip="Edit" />
+                                                            ToolTip="{loc:Loc Common.Edit}" />
                                                     <Button Style="{StaticResource IconButtonStyle}"
                                                             Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             Content="&#xE74D;"
-                                                            ToolTip="Delete" />
+                                                            ToolTip="{loc:Loc Common.Delete}" />
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
@@ -790,7 +805,7 @@
                                 <TextBlock Text="{Binding EverythingStatusText}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StrongTextBrush}" />
-                                <TextBlock Text="{Binding EverythingResults.Count, StringFormat={}{0} result(s)}"
+                                <TextBlock Text="{Binding EverythingResultCountText}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            TextAlignment="Right" />
                             </DockPanel>
@@ -860,12 +875,12 @@
                                        FontSize="32"
                                        Foreground="{DynamicResource AccentBrush}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Text="No saved items yet"
+                            <TextBlock Text="{loc:Loc Main.EmptyCatalog.Title}"
                                        FontSize="20"
                                        FontWeight="SemiBold"
                                        TextAlignment="Center"
                                        Margin="0,12,0,4" />
-                            <TextBlock Text="Add an app or folder to create your searchable launcher list."
+                            <TextBlock Text="{loc:Loc Main.EmptyCatalog.Message}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextAlignment="Center"
                                        TextWrapping="Wrap" />
@@ -887,12 +902,12 @@
                                    FontSize="28"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Select an item"
+                        <TextBlock Text="{loc:Loc Main.EmptySelection.Title}"
                                    FontSize="19"
                                    FontWeight="SemiBold"
                                    TextAlignment="Center"
                                    Margin="0,12,0,4" />
-                        <TextBlock Text="Details and actions appear here."
+                        <TextBlock Text="{loc:Loc Main.EmptySelection.Message}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextAlignment="Center" />
                     </StackPanel>
@@ -952,29 +967,29 @@
                         <ScrollViewer Grid.Row="2"
                                       VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <TextBlock Text="Full path" FontWeight="SemiBold" />
+                                <TextBlock Text="{loc:Loc Common.FullPath}" FontWeight="SemiBold" />
                                 <TextBox Text="{Binding SelectedEntry.PrimaryPath, Mode=OneWay}"
                                          Style="{StaticResource SelectableTextBoxStyle}"
                                          ToolTip="{Binding SelectedEntry.PrimaryPath}"
                                          Margin="0,5,0,14" />
 
-                                <TextBlock Text="File" FontWeight="SemiBold" />
+                                <TextBlock Text="{loc:Loc Common.File}" FontWeight="SemiBold" />
                                 <TextBox Text="{Binding SelectedEntry.ExeName, Mode=OneWay}"
                                          Style="{StaticResource SelectableTextBoxStyle}"
                                          Margin="0,5,0,14" />
 
-                                <TextBlock Text="Folder" FontWeight="SemiBold" />
+                                <TextBlock Text="{loc:Loc Common.Folder}" FontWeight="SemiBold" />
                                 <TextBox Text="{Binding SelectedEntry.FolderName, Mode=OneWay}"
                                          Style="{StaticResource SelectableTextBoxStyle}"
                                          ToolTip="{Binding SelectedEntry.FolderPath}"
                                          Margin="0,5,0,14" />
 
-                                <TextBlock Text="Tags" FontWeight="SemiBold" />
+                                <TextBlock Text="{loc:Loc Common.Tags}" FontWeight="SemiBold" />
                                 <TextBox Text="{Binding SelectedEntry.TagsText, Mode=OneWay}"
                                          Style="{StaticResource SelectableTextBoxStyle}"
                                          Margin="0,5,0,14" />
 
-                                <TextBlock Text="Note" FontWeight="SemiBold" />
+                                <TextBlock Text="{loc:Loc Common.Note}" FontWeight="SemiBold" />
                                 <TextBox Text="{Binding SelectedEntry.Note, Mode=OneWay}"
                                          Style="{StaticResource SelectableTextBoxStyle}"
                                          Margin="0,5,0,14" />
@@ -986,13 +1001,13 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="Added" FontWeight="SemiBold" />
+                                        <TextBlock Text="{loc:Loc Common.Added}" FontWeight="SemiBold" />
                                         <TextBox Text="{Binding SelectedEntry.DateAddedText, Mode=OneWay}"
                                                  Style="{StaticResource SelectableTextBoxStyle}"
                                                  Margin="0,5,0,0" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Last opened" FontWeight="SemiBold" />
+                                        <TextBlock Text="{loc:Loc Common.LastOpened}" FontWeight="SemiBold" />
                                         <TextBox Text="{Binding SelectedEntry.LastOpenedText, Mode=OneWay}"
                                                  Style="{StaticResource SelectableTextBoxStyle}"
                                                  Margin="0,5,0,0" />
@@ -1010,7 +1025,7 @@
                             <Button Style="{StaticResource PrimaryButtonStyle}"
                                     Command="{Binding OpenEntryCommand}"
                                     CommandParameter="{Binding SelectedEntry}"
-                                    Content="Open"
+                                    Content="{loc:Loc Common.Open}"
                                     MinHeight="40" />
                             <UniformGrid Grid.Row="2"
                                          Columns="4"
@@ -1018,24 +1033,24 @@
                                 <Button Style="{StaticResource IconButtonStyle}"
                                         Command="{Binding OpenContainingFolderCommand}"
                                         Content="&#xE838;"
-                                        ToolTip="Reveal in Explorer"
+                                        ToolTip="{loc:Loc Common.RevealInExplorer}"
                                         Margin="0,0,8,0" />
                                 <Button Style="{StaticResource IconButtonStyle}"
                                         Command="{Binding CopyPathCommand}"
                                         Content="&#xE8C8;"
-                                        ToolTip="Copy full path"
+                                        ToolTip="{loc:Loc Common.CopyFullPath}"
                                         Margin="0,0,8,0" />
                                 <Button Style="{StaticResource IconButtonStyle}"
                                         Command="{Binding ToggleFavoriteCommand}"
                                         CommandParameter="{Binding SelectedEntry}"
                                         Content="{Binding SelectedEntry.IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
-                                        ToolTip="Favorite"
+                                        ToolTip="{loc:Loc Common.Favorite}"
                                         Margin="0,0,8,0" />
                                 <Button Style="{StaticResource IconButtonStyle}"
                                         Command="{Binding DeleteEntryCommand}"
                                         CommandParameter="{Binding SelectedEntry}"
                                         Content="&#xE74D;"
-                                        ToolTip="Remove from catalog" />
+                                        ToolTip="{loc:Loc Main.Action.RemoveFromCatalog}" />
                             </UniformGrid>
                         </Grid>
                     </Grid>
@@ -1054,7 +1069,7 @@
                 </DockPanel>
             </Grid>
             </TabItem>
-            <TabItem Header="Tasks">
+            <TabItem Header="{loc:Loc Main.Tab.Tasks}">
                 <Grid Margin="0,14,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -1074,33 +1089,33 @@
                             <ComboBox Width="164"
                                       Margin="0,0,10,0"
                                       SelectedIndex="0">
-                                <ComboBoxItem Content="Priority: All" />
-                                <ComboBoxItem Content="Priority: High" />
-                                <ComboBoxItem Content="Priority: Medium" />
-                                <ComboBoxItem Content="Priority: Low" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.PriorityAll}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.PriorityHigh}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.PriorityMedium}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.PriorityLow}" />
                             </ComboBox>
                             <ComboBox Width="180"
                                       Margin="0,0,10,0"
                                       SelectedIndex="0">
-                                <ComboBoxItem Content="Due Date: All" />
-                                <ComboBoxItem Content="Due: This week" />
-                                <ComboBoxItem Content="Due: This month" />
-                                <ComboBoxItem Content="Overdue" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.DueAll}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.DueWeek}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.DueMonth}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.Overdue}" />
                             </ComboBox>
                             <ComboBox Width="164"
                                       SelectedIndex="0">
-                                <ComboBoxItem Content="Status: All" />
-                                <ComboBoxItem Content="Not Started" />
-                                <ComboBoxItem Content="In Progress" />
-                                <ComboBoxItem Content="Needs Review" />
-                                <ComboBoxItem Content="Completed" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.StatusAll}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.NotStarted}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.InProgress}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.NeedsReview}" />
+                                <ComboBoxItem Content="{loc:Loc Task.Filter.Completed}" />
                             </ComboBox>
                         </StackPanel>
 
                         <Button DockPanel.Dock="Right"
                                 Style="{StaticResource PrimaryButtonStyle}"
                                 MinWidth="160"
-                                Content="Create New Task"
+                                Content="{loc:Loc Main.Action.CreateTask}"
                                 Command="{Binding CreateTaskCommand}" />
                     </DockPanel>
 
@@ -1126,19 +1141,19 @@
                                     <ColumnDefinition Width="2.15*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="2"
-                                           Text="Task"
+                                           Text="{loc:Loc Task.Field.Title}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            FontWeight="SemiBold" />
                                 <TextBlock Grid.Column="3"
-                                           Text="Due Date"
+                                           Text="{loc:Loc Task.Field.DueDate}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            FontWeight="SemiBold" />
                                 <TextBlock Grid.Column="4"
-                                           Text="Status"
+                                           Text="{loc:Loc Task.Field.Status}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            FontWeight="SemiBold" />
                                 <TextBlock Grid.Column="5"
-                                           Text="Action"
+                                           Text="{loc:Loc Task.Field.Action}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            FontWeight="SemiBold" />
                             </Grid>
@@ -1228,17 +1243,17 @@
                                                                     CornerRadius="10"
                                                                     Padding="8">
                                                                 <StackPanel>
-                                                                    <Button Content="Todo"
+                                                                    <Button Content="{loc:Loc Task.Status.Todo}"
                                                                             Tag="Todo"
                                                                             Click="TaskStatusOption_Click"
                                                                             Style="{StaticResource SecondaryButtonStyle}"
                                                                             Margin="0,0,0,6" />
-                                                                    <Button Content="On-going"
+                                                                    <Button Content="{loc:Loc Task.Status.Ongoing}"
                                                                             Tag="Ongoing"
                                                                             Click="TaskStatusOption_Click"
                                                                             Style="{StaticResource SecondaryButtonStyle}"
                                                                             Margin="0,0,0,6" />
-                                                                    <Button Content="Done"
+                                                                    <Button Content="{loc:Loc Task.Status.Done}"
                                                                             Tag="Done"
                                                                             Click="TaskStatusOption_Click"
                                                                             Style="{StaticResource SecondaryButtonStyle}" />
@@ -1251,7 +1266,7 @@
                                                                 Orientation="Horizontal"
                                                                 VerticalAlignment="Center">
                                                         <Button Style="{StaticResource CompactTaskActionButtonStyle}"
-                                                                Content="Mark as Completed"
+                                                                Content="{loc:Loc Task.Dialog.MarkCompleted}"
                                                                 HorizontalAlignment="Left"
                                                                 VerticalAlignment="Center"
                                                                 Click="RemoveTask_Click" />
@@ -1259,7 +1274,7 @@
                                                                 Style="{StaticResource IconButtonStyle}"
                                                                 Content="&#xE70F;"
                                                                 VerticalAlignment="Center"
-                                                                ToolTip="Edit task"
+                                                                ToolTip="{loc:Loc Common.Edit}"
                                                                 Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                 CommandParameter="{Binding}" />
                                                         <Button Margin="8,0,0,0"
@@ -1281,7 +1296,7 @@
                     </Border>
                 </Grid>
             </TabItem>
-            <TabItem Header="Note">
+            <TabItem Header="{loc:Loc Main.Tab.Note}">
                 <Grid Margin="0,14,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="300" />
@@ -1306,7 +1321,7 @@
                             </Grid.RowDefinitions>
 
                             <StackPanel>
-                                <TextBlock Text="Notes"
+                                <TextBlock Text="{loc:Loc Main.Note.Title}"
                                            FontSize="24"
                                            FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding NoteResultCountText}"
@@ -1316,9 +1331,9 @@
 
                             <Grid Grid.Row="2">
                                 <TextBox Text="{Binding NoteSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Search note title, content, or tags" />
+                                         ToolTip="{loc:Loc Main.Tooltip.SearchNotes}" />
                                 <TextBlock Margin="14,0,42,0"
-                                           Text="Search notes by title, content, or tags"
+                                           Text="{loc:Loc Main.Placeholder.SearchNotes}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False"
@@ -1343,10 +1358,10 @@
                                     <ComboBox Width="150"
                                               ItemsSource="{Binding NoteFilters}"
                                               ItemTemplate="{StaticResource CenteredDropdownTextTemplate}"
-                                              SelectedItem="{Binding SelectedNoteFilter}" />
+                                              SelectedItem="{Binding SelectedNoteFilterOption}" />
                                     <Button Grid.Column="2"
                                             Style="{StaticResource PrimaryButtonStyle}"
-                                            Content="New Note"
+                                            Content="{loc:Loc Main.Action.NewNote}"
                                             Height="34"
                                             MinWidth="104"
                                             Padding="14,4"
@@ -1394,7 +1409,7 @@
                                                                 FontSize="13"
                                                                 Content="&#xE734;"
                                                                 Opacity="{Binding IsFavorite, Converter={StaticResource FavoriteOpacityConverter}}"
-                                                                ToolTip="Toggle favorite"
+                                                                ToolTip="{loc:Loc Common.ToggleFavorite}"
                                                                 Command="{Binding DataContext.ToggleNoteFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                 CommandParameter="{Binding}" />
                                                     </Grid>
@@ -1436,10 +1451,10 @@
                                         CornerRadius="10"
                                         Visibility="{Binding HasNoNotes, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <StackPanel>
-                                        <TextBlock Text="No notes yet"
+                                        <TextBlock Text="{loc:Loc Main.Note.EmptyTitle}"
                                                    FontWeight="SemiBold"
                                                    FontSize="15" />
-                                        <TextBlock Text="Create your first note to start writing, pin favorites, and search later."
+                                        <TextBlock Text="{loc:Loc Main.Note.EmptyMessage}"
                                                    Margin="0,6,0,0"
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    TextWrapping="Wrap" />
@@ -1468,7 +1483,7 @@
                                 </Grid.RowDefinitions>
 
                                 <DockPanel LastChildFill="False">
-                                    <TextBlock Text="Editor"
+                                    <TextBlock Text="{loc:Loc Main.Note.EditorTitle}"
                                                FontSize="24"
                                                FontWeight="SemiBold"
                                                DockPanel.Dock="Left" />
@@ -1477,11 +1492,11 @@
                                         <Button Style="{StaticResource IconButtonStyle}"
                                                 Margin="0,0,8,0"
                                                 Content="&#xE734;"
-                                                ToolTip="Toggle favorite"
+                                                ToolTip="{loc:Loc Common.ToggleFavorite}"
                                                 Command="{Binding ToggleNoteFavoriteCommand}"
                                                 CommandParameter="{Binding SelectedNote}" />
                                         <Button Style="{StaticResource SecondaryButtonStyle}"
-                                                Content="Delete"
+                                                Content="{loc:Loc Common.Delete}"
                                                 Padding="14,8"
                                                 Command="{Binding DeleteNoteCommand}"
                                                 CommandParameter="{Binding SelectedNote}" />
@@ -1492,9 +1507,9 @@
                                     <TextBox Text="{Binding NoteEditorTitle, UpdateSourceTrigger=PropertyChanged}"
                                              FontSize="20"
                                              FontWeight="SemiBold"
-                                             ToolTip="Note title" />
+                                             ToolTip="{loc:Loc Main.Tooltip.NoteTitle}" />
                                     <TextBlock Margin="14,0,14,0"
-                                               Text="Note title"
+                                               Text="{loc:Loc Main.Placeholder.NoteTitle}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"
                                                IsHitTestVisible="False"
@@ -1503,9 +1518,9 @@
 
                                 <Grid Grid.Row="4">
                                     <TextBox Text="{Binding NoteEditorTagsText, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="Comma-separated tags, for example work, ideas, urgent" />
+                                             ToolTip="{loc:Loc Main.Tooltip.NoteTags}" />
                                     <TextBlock Margin="14,0,14,0"
-                                               Text="Tags, for example work, ideas, urgent"
+                                               Text="{loc:Loc Main.Placeholder.NoteTags}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"
                                                IsHitTestVisible="False"
@@ -1520,9 +1535,9 @@
                                              VerticalContentAlignment="Top"
                                              VerticalScrollBarVisibility="Auto"
                                              HorizontalScrollBarVisibility="Disabled"
-                                             ToolTip="Write your note here. Checklist lines such as - [ ] and - [x] are recognized in preview." />
+                                             ToolTip="{loc:Loc Main.Tooltip.NoteBody}" />
                                     <TextBlock Margin="14,12,14,12"
-                                               Text="Write your note here. You can use headings and checklist lines like - [ ] or - [x]."
+                                               Text="{loc:Loc Main.Placeholder.NoteBody}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Top"
                                                TextWrapping="Wrap"
@@ -1535,11 +1550,11 @@
                                         VerticalAlignment="Center"
                                         HorizontalAlignment="Center"
                                         MaxWidth="340">
-                                <TextBlock Text="Choose a note"
+                                <TextBlock Text="{loc:Loc Main.Note.ChooseTitle}"
                                            FontSize="20"
                                            FontWeight="SemiBold"
                                            TextAlignment="Center" />
-                                <TextBlock Text="Pick an existing note from the list or create a new one to start editing."
+                                <TextBlock Text="{loc:Loc Main.Note.ChooseMessage}"
                                            Margin="0,8,0,0"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            TextAlignment="Center"
@@ -1565,10 +1580,10 @@
                                 </Grid.RowDefinitions>
 
                                 <StackPanel>
-                                    <TextBlock Text="Preview"
+                                    <TextBlock Text="{loc:Loc Main.Note.PreviewTitle}"
                                                FontSize="24"
                                                FontWeight="SemiBold" />
-                                    <TextBlock Text="Read mode with simple checklist and heading support"
+                                    <TextBlock Text="{loc:Loc Main.Note.PreviewSubtitle}"
                                                Margin="0,4,0,0"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                TextWrapping="Wrap" />
@@ -1586,7 +1601,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Created"
+                                            <TextBlock Text="{loc:Loc Common.Created}"
                                                        Foreground="{DynamicResource MutedTextBrush}" />
                                             <TextBlock Grid.Column="1"
                                                        Margin="16,0,0,0"
@@ -1597,7 +1612,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Updated"
+                                            <TextBlock Text="{loc:Loc Common.Updated}"
                                                        Foreground="{DynamicResource MutedTextBrush}" />
                                             <TextBlock Grid.Column="1"
                                                        Margin="16,0,0,0"
@@ -1608,7 +1623,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Last viewed"
+                                            <TextBlock Text="{loc:Loc Common.LastViewed}"
                                                        Foreground="{DynamicResource MutedTextBrush}" />
                                             <TextBlock Grid.Column="1"
                                                        Margin="16,0,0,0"
@@ -1619,7 +1634,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Words"
+                                            <TextBlock Text="{loc:Loc Common.Words}"
                                                        Foreground="{DynamicResource MutedTextBrush}" />
                                             <TextBlock Grid.Column="1"
                                                        Margin="16,0,0,0"
@@ -1630,7 +1645,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Checklist"
+                                            <TextBlock Text="{loc:Loc Common.Checklist}"
                                                        Foreground="{DynamicResource MutedTextBrush}" />
                                             <TextBlock Grid.Column="1"
                                                        Margin="16,0,0,0"
@@ -1671,11 +1686,11 @@
                                         VerticalAlignment="Center"
                                         HorizontalAlignment="Center"
                                         MaxWidth="260">
-                                <TextBlock Text="Preview will appear here"
+                                <TextBlock Text="{loc:Loc Main.Note.PreviewEmptyTitle}"
                                            FontSize="18"
                                            FontWeight="SemiBold"
                                            TextAlignment="Center" />
-                                <TextBlock Text="Once a note is selected, this panel shows a simple read view plus note details."
+                                <TextBlock Text="{loc:Loc Main.Note.PreviewEmptyMessage}"
                                            Margin="0,8,0,0"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            TextAlignment="Center"

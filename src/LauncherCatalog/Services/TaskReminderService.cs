@@ -134,17 +134,34 @@ public sealed class TaskReminderService : IDisposable
 
     private static string BuildTitle(TaskItem task)
     {
+        var localizer = LocalizationService.Current;
         return task.Priority switch
         {
-            TaskPriority.Urgent => "Urgent Task Reminder",
-            TaskPriority.Normal => "Task Reminder",
-            _ => "Low Priority Reminder"
+            TaskPriority.Urgent => localizer.Get("Task.Reminder.UrgentTitle"),
+            TaskPriority.Normal => localizer.Get("Task.Reminder.NormalTitle"),
+            _ => localizer.Get("Task.Reminder.LowTitle")
         };
     }
 
     private static string BuildMessage(TaskItem task)
     {
-        var dueDateText = task.DueDate is null ? "No due date set." : $"Due {task.DueDateText}.";
-        return $"{task.Title} is {task.StatusText.ToLowerInvariant()} and marked {task.Priority.ToString().ToLowerInvariant()}. {dueDateText}";
+        var localizer = LocalizationService.Current;
+        var dueDateText = task.DueDate is null
+            ? localizer.Get("Task.Reminder.NoDueDate")
+            : localizer.Format("Task.Reminder.DueDate", task.DueDateText);
+
+        var priorityText = task.Priority switch
+        {
+            TaskPriority.Urgent => localizer.Get("Task.Priority.Urgent").ToLower(localizer.CurrentCulture),
+            TaskPriority.Normal => localizer.Get("Task.Priority.Normal").ToLower(localizer.CurrentCulture),
+            _ => localizer.Get("Task.Priority.Low").ToLower(localizer.CurrentCulture)
+        };
+
+        return localizer.Format(
+            "Task.Reminder.Message",
+            task.Title,
+            task.StatusText.ToLower(localizer.CurrentCulture),
+            priorityText,
+            dueDateText);
     }
 }

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using LauncherCatalog.Models;
+using LauncherCatalog.Services;
 using LauncherCatalog.ViewModels;
 
 namespace LauncherCatalog.Views;
@@ -42,7 +43,7 @@ public partial class TaskEditorDialog : Window
     {
         if (!_viewModel.Validate(out var message))
         {
-            System.Windows.MessageBox.Show(this, message, "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, message, LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

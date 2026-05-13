@@ -7,10 +7,11 @@ public sealed class FilePickerService : IFilePickerService
 {
     public string? PickExecutable(Window owner, string? initialPath = null)
     {
+        var localizer = LocalizationService.Current;
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "Select file to open",
-            Filter = "All files (*.*)|*.*",
+            Title = localizer.Get("Picker.SelectFile"),
+            Filter = localizer.Get("Picker.AllFiles"),
             CheckFileExists = true,
             Multiselect = false
         };
@@ -26,9 +27,10 @@ public sealed class FilePickerService : IFilePickerService
 
     public string? PickFolder(Window owner, string? initialPath = null)
     {
+        var localizer = LocalizationService.Current;
         using var dialog = new System.Windows.Forms.FolderBrowserDialog
         {
-            Description = "Select folder",
+            Description = localizer.Get("Picker.SelectFolder"),
             UseDescriptionForTitle = true,
             ShowNewFolderButton = false
         };

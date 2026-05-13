@@ -97,8 +97,9 @@ public partial class MainWindow : Window
 
     private Forms.NotifyIcon CreateTrayIcon()
     {
-        var openItem = new Forms.ToolStripMenuItem("Open", null, (_, _) => RestoreFromTray());
-        var quitItem = new Forms.ToolStripMenuItem("Quit", null, (_, _) => QuitFromTray());
+        var localizer = LocalizationService.Current;
+        var openItem = new Forms.ToolStripMenuItem(localizer.Get("Tray.Open"), null, (_, _) => RestoreFromTray());
+        var quitItem = new Forms.ToolStripMenuItem(localizer.Get("Tray.Quit"), null, (_, _) => QuitFromTray());
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add(openItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
@@ -108,7 +109,7 @@ public partial class MainWindow : Window
         {
             ContextMenuStrip = menu,
             Icon = LoadTrayIcon(),
-            Text = "Launcher Catalog",
+            Text = localizer.Get("Common.AppName"),
             Visible = true
         };
 
@@ -222,7 +223,7 @@ public partial class MainWindow : Window
         dialog.ShowDialog();
         if (!HotkeyGesture.TryParse(dialog.HotkeyText, out _))
         {
-            System.Windows.MessageBox.Show(this, "That shortcut could not be registered.", "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, LocalizationService.Current.Get("Settings.Hotkey.Invalid"), LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -279,12 +280,12 @@ public partial class MainWindow : Window
             return true;
         }
 
-        var message = $"Could not register quick search shortcut {gesture}. Another app may already use it.";
+        var message = LocalizationService.Current.Format("Settings.Hotkey.InUse", gesture);
         _viewModel.StatusMessage = message;
 
         if (showWarning)
         {
-            System.Windows.MessageBox.Show(this, message, "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, message, LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         return false;
@@ -439,7 +440,7 @@ public partial class MainWindow : Window
         {
             RestoreTaskRow(rowBorder, originalHeight, originalMargin);
             AppLogger.WriteInfo($"Task removal failed: {exception.Message}");
-            System.Windows.MessageBox.Show(this, "The task could not be removed.", "Launcher Catalog", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, LocalizationService.Current.Get("Task.Message.RemoveFailed"), LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

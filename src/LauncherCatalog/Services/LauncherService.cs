@@ -11,7 +11,7 @@ public sealed class LauncherService
         var path = entry.Type == EntryType.App ? entry.ExePath : entry.FolderPath;
         if (string.IsNullOrWhiteSpace(path))
         {
-            throw new InvalidOperationException("The saved path is empty.");
+            throw new InvalidOperationException(LocalizationService.Current.Get("Launcher.Error.SavedPathEmpty"));
         }
 
         var startInfo = new ProcessStartInfo
@@ -32,7 +32,7 @@ public sealed class LauncherService
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            throw new InvalidOperationException("The path is empty.");
+            throw new InvalidOperationException(LocalizationService.Current.Get("Launcher.Error.PathEmpty"));
         }
 
         Process.Start(new ProcessStartInfo
@@ -48,7 +48,7 @@ public sealed class LauncherService
         var targetPath = entry.Type == EntryType.App ? entry.ExePath : entry.FolderPath;
         if (string.IsNullOrWhiteSpace(targetPath))
         {
-            throw new InvalidOperationException("The saved path is empty.");
+            throw new InvalidOperationException(LocalizationService.Current.Get("Launcher.Error.SavedPathEmpty"));
         }
 
         var arguments = entry.Type == EntryType.App
@@ -67,7 +67,7 @@ public sealed class LauncherService
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            throw new InvalidOperationException("The path is empty.");
+            throw new InvalidOperationException(LocalizationService.Current.Get("Launcher.Error.PathEmpty"));
         }
 
         var arguments = isFolder ? $"\"{path}\"" : $"/select,\"{path}\"";

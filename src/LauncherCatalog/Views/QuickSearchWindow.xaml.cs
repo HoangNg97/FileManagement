@@ -255,14 +255,14 @@ public partial class QuickSearchWindow : Window
             EntryType type,
             string displayName,
             string primaryPath,
-            string sourceLabel)
+            string sourceKey)
         {
             CatalogEntry = catalogEntry;
             EverythingResult = everythingResult;
             Type = type;
             DisplayName = displayName;
             PrimaryPath = primaryPath;
-            SourceLabel = sourceLabel;
+            SourceKey = sourceKey;
         }
 
         public CatalogEntry? CatalogEntry { get; }
@@ -271,7 +271,8 @@ public partial class QuickSearchWindow : Window
         public string DisplayName { get; }
         public string PrimaryPath { get; }
         public string PrimaryPathPreview => PathPreviewFormatter.Truncate(PrimaryPath);
-        public string SourceLabel { get; }
+        public string SourceKey { get; }
+        public string SourceLabel => LocalizationService.Current.Get(SourceKey);
 
         public static QuickSearchResult FromCatalog(CatalogEntry entry)
         {
@@ -281,7 +282,7 @@ public partial class QuickSearchWindow : Window
                 entry.Type,
                 entry.DisplayName,
                 entry.PrimaryPath,
-                "Catalog");
+                "QuickSearch.Source.Catalog");
         }
 
         public static QuickSearchResult FromEverything(EverythingResult result)
@@ -292,7 +293,7 @@ public partial class QuickSearchWindow : Window
                 result.Type,
                 result.DisplayName,
                 result.FullPath,
-                "Everything");
+                "QuickSearch.Source.Everything");
         }
     }
 }

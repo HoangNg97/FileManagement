@@ -47,11 +47,37 @@ dist\LauncherCatalog-win-x64
 
 - Custom window chrome is enabled (`WindowStyle=None`) with an in-app title bar.
 - The title bar includes:
+  - language selector with runtime switching
   - theme toggle (dark/light)
   - minimize / maximize-restore / close buttons
 - Title bar supports drag and double-click maximize/restore.
 - Task due-date selection uses a text-first field that opens a Material Design popup calendar and follows both light and dark mode.
 - Catalog/task filter dropdowns use padded left-aligned labels, and task due-date/action controls use compact sizing to preserve table readability.
+- UI text is centralized for localization and can switch languages without restarting the app.
+
+## Localization
+
+- Current built-in languages:
+  - `English`
+  - `Japanese`
+- Language changes are applied at runtime from the title bar language dropdown.
+- User-facing text is centralized in:
+
+```text
+src/LauncherCatalog/Resources/Strings.resx
+src/LauncherCatalog/Resources/Strings.ja.resx
+```
+
+- Runtime localization infrastructure:
+  - `Services/LocalizationService.cs`
+  - `Services/LocExtension.cs`
+- XAML text should use the localization markup extension instead of hardcoded strings:
+
+```xaml
+Text="{loc:Loc Some.Resource.Key}"
+```
+
+- New user-facing strings should be added to the resource files instead of being hardcoded in XAML or C#.
 
 ## Catalog Feature
 
@@ -151,6 +177,15 @@ Current `tasks` schema is intentionally extendable (includes `status`, `priority
 ```
 
 Current `notes` schema stores `title`, `body`, `tags_json`, `is_favorite`, `created_at`, `updated_at`, and `last_viewed_at`.
+
+### App Settings
+
+App-level UI settings are stored in the catalog database `settings` table.
+
+Current settings include:
+- `theme`
+- `quick_search_hotkey`
+- `language_code`
 
 ## Crash Logs
 

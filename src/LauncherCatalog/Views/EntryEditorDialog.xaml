@@ -1,6 +1,7 @@
 <Window x:Class="LauncherCatalog.Views.EntryEditorDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:LauncherCatalog.Services"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="{Binding WindowTitle}"
         Width="560"
@@ -89,7 +90,7 @@
                     <TextBlock Text="{Binding WindowTitle}"
                                FontSize="22"
                                FontWeight="SemiBold" />
-                    <TextBlock Text="Save searchable details for this item."
+                    <TextBlock Text="{loc:Loc Entry.Dialog.Subtitle}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                Margin="0,4,0,0" />
                 </StackPanel>
@@ -109,7 +110,7 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Display name" FontWeight="SemiBold" Margin="0,0,0,6" />
+                    <TextBlock Text="{loc:Loc Entry.Dialog.DisplayName}" FontWeight="SemiBold" Margin="0,0,0,6" />
                     <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
 
@@ -125,12 +126,12 @@
                         <Button Grid.Column="2"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 Click="Browse_Click"
-                                ToolTip="Browse">
+                                ToolTip="{loc:Loc Common.Browse}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding BrowseGlyph}"
                                            FontFamily="Segoe MDL2 Assets"
                                            Margin="0,0,7,0" />
-                                <TextBlock Text="Browse" />
+                                <TextBlock Text="{loc:Loc Common.Browse}" />
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -143,17 +144,17 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="File name" FontWeight="SemiBold" Margin="0,0,0,6" />
+                        <TextBlock Text="{loc:Loc Entry.Dialog.FileName}" FontWeight="SemiBold" Margin="0,0,0,6" />
                         <TextBox Text="{Binding ExeName, Mode=OneWay}" IsReadOnly="True" Background="{DynamicResource ControlMutedBrush}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="Folder name" FontWeight="SemiBold" Margin="0,0,0,6" />
+                        <TextBlock Text="{loc:Loc Entry.Dialog.FolderName}" FontWeight="SemiBold" Margin="0,0,0,6" />
                         <TextBox Text="{Binding FolderName, Mode=OneWay}" IsReadOnly="True" Background="{DynamicResource ControlMutedBrush}" />
                     </StackPanel>
                 </Grid>
 
                 <StackPanel Grid.Row="6">
-                    <TextBlock Text="Tags" FontWeight="SemiBold" Margin="0,0,0,6" />
+                    <TextBlock Text="{loc:Loc Common.Tags}" FontWeight="SemiBold" Margin="0,0,0,6" />
                     <TextBox Text="{Binding TagsText, UpdateSourceTrigger=PropertyChanged}" />
                     <ItemsControl ItemsSource="{Binding AvailableRecentTags}"
                                   Visibility="{Binding HasAvailableRecentTags, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -174,7 +175,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="8">
-                    <TextBlock Text="Note" FontWeight="SemiBold" Margin="0,0,0,6" />
+                    <TextBlock Text="{loc:Loc Common.Note}" FontWeight="SemiBold" Margin="0,0,0,6" />
                     <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
                              Height="88"
                              AcceptsReturn="True"
@@ -187,12 +188,12 @@
             <StackPanel Grid.Row="4"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
-                <Button Content="Cancel"
+                <Button Content="{loc:Loc Common.Cancel}"
                         Style="{StaticResource SecondaryButtonStyle}"
                         MinWidth="92"
                         Click="Cancel_Click"
                         Margin="0,0,10,0" />
-                <Button Content="Save"
+                <Button Content="{loc:Loc Common.Save}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         MinWidth="92"
                         Click="Save_Click" />

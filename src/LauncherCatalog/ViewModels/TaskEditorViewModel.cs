@@ -1,15 +1,17 @@
 using LauncherCatalog.Models;
+using LauncherCatalog.Services;
 
 namespace LauncherCatalog.ViewModels;
 
 public sealed class TaskEditorViewModel : ObservableObject
 {
+    private readonly LocalizationService _localizer = LocalizationService.Current;
     private readonly Guid _taskId;
     private readonly bool _isEditMode;
     private string _title = string.Empty;
     private string _note = string.Empty;
-    private TaskPriority _selectedPriority = TaskPriority.Normal;
-    private Models.TaskStatus _selectedStatus = Models.TaskStatus.Todo;
+    private LocalizedOption<TaskPriority> _selectedPriorityOption = null!;
+    private LocalizedOption<Models.TaskStatus> _selectedStatusOption = null!;
     private DateTime _dueDate = DateTime.Today;
     private readonly bool _notificationsEnabled = true;
     private readonly string? _lastReminderKey;
@@ -17,6 +19,21 @@ public sealed class TaskEditorViewModel : ObservableObject
     public TaskEditorViewModel(TaskItem? task = null)
     {
         _isEditMode = task is not null;
+        Priorities =
+        [
+            new(TaskPriority.Low, "Task.Priority.Low"),
+            new(TaskPriority.Normal, "Task.Priority.Normal"),
+            new(TaskPriority.Urgent, "Task.Priority.Urgent")
+        ];
+        Statuses =
+        [
+            new(Models.TaskStatus.Todo, "Task.Status.Todo"),
+            new(Models.TaskStatus.Ongoing, "Task.Status.Ongoing"),
+            new(Models.TaskStatus.Done, "Task.Status.Done")
+        ];
+        _selectedPriorityOption = Priorities.First(option => option.Value == TaskPriority.Normal);
+        _selectedStatusOption = Statuses.First(option => option.Value == Models.TaskStatus.Todo);
+
         if (task is null)
         {
             _taskId = Guid.NewGuid();
@@ -26,20 +43,21 @@ public sealed class TaskEditorViewModel : ObservableObject
         _taskId = task.Id == Guid.Empty ? Guid.NewGuid() : task.Id;
         Title = task.Title;
         Note = task.Description ?? string.Empty;
-        SelectedPriority = task.Priority;
-        SelectedStatus = task.Status;
+        SelectedPriorityOption = Priorities.First(option => option.Value == task.Priority);
+        SelectedStatusOption = Statuses.First(option => option.Value == task.Status);
         DueDate = task.DueDate?.Date ?? DateTime.Today;
         _notificationsEnabled = task.NotificationsEnabled;
         _lastReminderKey = task.LastReminderKey;
     }
 
-    public TaskPriority[] Priorities { get; } = [TaskPriority.Low, TaskPriority.Normal, TaskPriority.Urgent];
-    public Models.TaskStatus[] Statuses { get; } = [Models.TaskStatus.Todo, Models.TaskStatus.Ongoing, Models.TaskStatus.Done];
-    public string StatusDisplay => "Todo";
+    public LocalizedOption<TaskPriority>[] Priorities { get; }
+    public LocalizedOption<Models.TaskStatus>[] Statuses { get; }
+    public string StatusDisplay => _localizer.Get("Task.Status.Todo");
     public bool IsEditMode => _isEditMode;
     public bool IsCreateMode => !_isEditMode;
-    public string ActionButtonText => _isEditMode ? "Edit" : "Create";
-    public string WindowTitle => _isEditMode ? "Edit Task" : "Create Task";
+    public string ActionButtonText => _isEditMode ? _localizer.Get("Task.Dialog.EditAction") : _localizer.Get("Task.Dialog.CreateAction");
+    public string WindowTitle => _isEditMode ? _localizer.Get("Task.Dialog.EditTitle") : _localizer.Get("Task.Dialog.CreateTitle");
+    public string SubtitleText => _isEditMode ? _localizer.Get("Task.Dialog.EditSubtitle") : _localizer.Get("Task.Dialog.CreateSubtitle");
 
     public string Title
     {
@@ -53,16 +71,16 @@ public sealed class TaskEditorViewModel : ObservableObject
         set => SetProperty(ref _note, value);
     }
 
-    public TaskPriority SelectedPriority
+    public LocalizedOption<TaskPriority> SelectedPriorityOption
     {
-        get => _selectedPriority;
-        set => SetProperty(ref _selectedPriority, value);
+        get => _selectedPriorityOption;
+        set => SetProperty(ref _selectedPriorityOption, value);
     }
 
-    public Models.TaskStatus SelectedStatus
+    public LocalizedOption<Models.TaskStatus> SelectedStatusOption
     {
-        get => _selectedStatus;
-        set => SetProperty(ref _selectedStatus, value);
+        get => _selectedStatusOption;
+        set => SetProperty(ref _selectedStatusOption, value);
     }
 
     public DateTime DueDate
@@ -77,13 +95,13 @@ public sealed class TaskEditorViewModel : ObservableObject
         }
     }
 
-    public string DueDateText => DueDate.ToString("MM/dd/yyyy");
+    public string DueDateText => DueDate.ToString("d");
 
     public bool Validate(out string message)
     {
         if (string.IsNullOrWhiteSpace(Title))
         {
-            message = "Please enter task title.";
+            message = _localizer.Get("Task.Dialog.ValidationTitle");
             return false;
         }
 
@@ -100,12 +118,12 @@ public sealed class TaskEditorViewModel : ObservableObject
             Title = Title.Trim(),
             Description = string.IsNullOrWhiteSpace(Note) ? null : Note.Trim(),
             DueDate = DueDate.Date,
-            Status = _isEditMode ? SelectedStatus : Models.TaskStatus.Todo,
-            Priority = SelectedPriority,
-            IsCompleted = _isEditMode ? SelectedStatus == Models.TaskStatus.Done : false,
+            Status = _isEditMode ? SelectedStatusOption.Value : Models.TaskStatus.Todo,
+            Priority = SelectedPriorityOption.Value,
+            IsCompleted = _isEditMode ? SelectedStatusOption.Value == Models.TaskStatus.Done : false,
             NotificationsEnabled = _notificationsEnabled,
             LastReminderKey = _lastReminderKey,
-            CompletedAt = _isEditMode && SelectedStatus == Models.TaskStatus.Done ? now : null,
+            CompletedAt = _isEditMode && SelectedStatusOption.Value == Models.TaskStatus.Done ? now : null,
             CreatedAt = now,
             UpdatedAt = now,
             SortOrder = 0
