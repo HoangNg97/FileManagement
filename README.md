@@ -61,6 +61,7 @@ dist\LauncherCatalog-win-x64
   - `English`
   - `Japanese`
 - Language changes are applied at runtime from the title bar language dropdown.
+- The app registers itself to launch at Windows sign-in for the current user.
 - User-facing text is centralized in:
 
 ```text
@@ -186,6 +187,11 @@ Current settings include:
 - `theme`
 - `quick_search_hotkey`
 - `language_code`
+
+## Startup Behavior
+
+- The app registers itself in the current user Windows `Run` key so it starts automatically after sign-in.
+- Quick search can be opened even when the main window is already visible.
 
 ## Crash Logs
 

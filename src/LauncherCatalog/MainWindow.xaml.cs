@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private readonly EverythingSearchService _everythingSearchService;
     private readonly Forms.NotifyIcon _trayIcon;
     private readonly TaskReminderService _taskReminderService;
+    private readonly StartupLaunchService _startupLaunchService;
     private readonly GlobalHotkeyService _hotkeyService = new();
     private HwndSource? _hwndSource;
     private QuickSearchWindow? _quickSearchWindow;
@@ -55,6 +56,7 @@ public partial class MainWindow : Window
             new TaskDialogService(),
             () => this);
         _taskRepository = new TaskRepository();
+        _startupLaunchService = new StartupLaunchService();
 
         DataContext = _viewModel;
         SourceInitialized += MainWindow_SourceInitialized;
@@ -84,6 +86,7 @@ public partial class MainWindow : Window
         }
 
         await _viewModel.LoadAsync();
+        _startupLaunchService.EnsureEnabled();
         _ = _everythingSearchService.EnsureStartedAsync();
         _taskReminderService.Start();
         RegisterQuickSearchHotkey(showWarning: false);
@@ -239,11 +242,6 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            if (IsMainWindowOpen)
-            {
-                return;
-            }
-
             if (_quickSearchWindow is { IsVisible: true })
             {
                 _quickSearchWindow.Activate();
@@ -258,8 +256,6 @@ public partial class MainWindow : Window
             _quickSearchWindow.FocusSearch();
         });
     }
-
-    private bool IsMainWindowOpen => IsVisible && WindowState != WindowState.Minimized;
 
     private void RegisterQuickSearchHotkey(bool showWarning)
     {
