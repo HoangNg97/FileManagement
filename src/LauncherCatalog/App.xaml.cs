@@ -157,9 +157,10 @@ public partial class App : System.Windows.Application
     {
         try
         {
+            var localizer = LocalizationService.Current;
             System.Windows.MessageBox.Show(
-                $"Launcher Catalog hit an unexpected error and saved a crash log here:\n\n{logPath}\n\nPlease send this file for debugging.",
-                "Launcher Catalog crashed",
+                localizer.Format("App.Crash.Message", Environment.NewLine, logPath),
+                localizer.Get("App.Crash.Title"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }

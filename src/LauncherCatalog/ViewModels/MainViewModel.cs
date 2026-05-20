@@ -331,7 +331,7 @@ public sealed class MainViewModel : ObservableObject
             _repository.Settings.LanguageCode = value.Code;
             _localizer.SetLanguage(value.Code);
             _ = SaveSettingsAsync("Settings.Language.SaveFailed");
-            StatusMessage = _localizer.Format("Settings.Language.Updated", value.NativeName);
+            StatusMessage = _localizer.Format("Settings.Language.Updated", value.DisplayName);
             OnPropertyChanged(nameof(CurrentLanguageButtonText));
         }
     }
@@ -375,8 +375,8 @@ public sealed class MainViewModel : ObservableObject
     public string StoragePath => _repository.StoragePath;
     public string NoteStoragePath => _noteRepository.StoragePath;
     public string QuickSearchHotkeyText => _repository.Settings.QuickSearchHotkey;
-    public string QuickSearchHotkeyToolTip => _localizer.Format("Main.QuickSearchTooltip", QuickSearchHotkeyText);
-    public string CurrentLanguageButtonText => string.Equals(SelectedLanguage.Code, "ja", StringComparison.OrdinalIgnoreCase) ? "JP" : "EN";
+    public string QuickSearchHotkeyToolTip => _localizer.Format("Main.QuickSearchTooltip", HotkeyGesture.FormatForDisplay(QuickSearchHotkeyText));
+    public string CurrentLanguageButtonText => SelectedLanguage.DisplayName;
     public string ResultCountText => SelectedSearchSource switch
     {
         SearchSourceMode.Everything => _localizer.Format("Main.ResultCount.EverythingOnly", _everythingResultCount),
@@ -695,7 +695,22 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(QuickSearchHotkeyText));
         OnPropertyChanged(nameof(QuickSearchHotkeyToolTip));
         await SaveSettingsAsync("Settings.Hotkey.SaveFailed");
-        StatusMessage = _localizer.Format("Settings.Hotkey.Updated", hotkeyText);
+        StatusMessage = _localizer.Format("Settings.Hotkey.Updated", HotkeyGesture.FormatForDisplay(hotkeyText));
+    }
+
+    public void PrepareForDatabaseRestore()
+    {
+        _searchRefreshCts?.Cancel();
+        _searchRefreshCts?.Dispose();
+        _searchRefreshCts = null;
+
+        _missingStateRefreshCts?.Cancel();
+        _missingStateRefreshCts?.Dispose();
+        _missingStateRefreshCts = null;
+
+        _noteSaveCts?.Cancel();
+        _noteSaveCts?.Dispose();
+        _noteSaveCts = null;
     }
 
     private async Task AddAppAsync()

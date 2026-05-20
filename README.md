@@ -1,6 +1,6 @@
-# Launcher Catalog
+# WorkSync
 
-Launcher Catalog is a Windows desktop app built with C#, WPF, and .NET 8.
+WorkSync is a Windows desktop app built with C#, WPF, and .NET 8.
 
 It currently has 3 main tabs:
 - `Catalog`: searchable launcher list for apps/folders.
@@ -34,13 +34,13 @@ dotnet run --project .\src\LauncherCatalog\LauncherCatalog.csproj
 ## Publish (Single EXE)
 
 ```powershell
-dotnet publish .\src\LauncherCatalog\LauncherCatalog.csproj -c Release -r win-x64 --self-contained true -o .\dist\LauncherCatalog-win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+dotnet publish .\src\LauncherCatalog\LauncherCatalog.csproj -c Release -r win-x64 --self-contained true -o .\dist\WorkSync-win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
 Output folder:
 
 ```text
-dist\LauncherCatalog-win-x64
+dist\WorkSync-win-x64
 ```
 
 ## Current UI/UX Notes
@@ -137,6 +137,8 @@ Current note capabilities:
 
 ## Storage
 
+For backward compatibility, local app data still uses the legacy `LauncherCatalog` folder name.
+
 All app data is under:
 
 ```text
@@ -178,6 +180,21 @@ Current `tasks` schema is intentionally extendable (includes `status`, `priority
 ```
 
 Current `notes` schema stores `title`, `body`, `tags_json`, `is_favorite`, `created_at`, `updated_at`, and `last_viewed_at`.
+
+### Automatic Backups
+
+The app also keeps automatic SQLite backups in:
+
+```text
+%LOCALAPPDATA%\LauncherCatalog\Backups
+```
+
+Behavior:
+- backup checks run automatically at app startup and continue while the app is running in the tray
+- when the last successful backup is older than 2 days, the app creates one timestamped backup version folder under `Backups\Versions`
+- each version folder contains the database files together using their original names such as `catalog.db`, `task.db`, and `note.db`
+- only the newest 10 backup versions are kept; older version folders are deleted automatically
+- restore instructions are written to `%LOCALAPPDATA%\LauncherCatalog\Backups\RESTORE.txt` so the live database path is easy to find later
 
 ### App Settings
 

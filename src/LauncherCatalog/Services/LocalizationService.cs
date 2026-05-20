@@ -1,11 +1,12 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Resources;
 using LauncherCatalog.Models;
 
 namespace LauncherCatalog.Services;
 
-public sealed class LocalizationService
+public sealed class LocalizationService : INotifyPropertyChanged
 {
     private readonly ResourceManager _resourceManager = new("LauncherCatalog.Resources.Strings", typeof(LocalizationService).Assembly);
     private CultureInfo _currentCulture = CultureInfo.CurrentUICulture;
@@ -14,8 +15,8 @@ public sealed class LocalizationService
     {
         Languages = new List<LanguageOption>
         {
-            new LanguageOption("en", "English"),
-            new LanguageOption("ja", "日本語")
+            new LanguageOption("en", "Language.English"),
+            new LanguageOption("ja", "Language.Japanese")
         }.AsReadOnly();
 
         ApplyCulture(_currentCulture);
@@ -24,6 +25,7 @@ public sealed class LocalizationService
     public static LocalizationService Current { get; } = new();
 
     public event EventHandler? CultureChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public ReadOnlyCollection<LanguageOption> Languages { get; }
 
@@ -56,6 +58,14 @@ public sealed class LocalizationService
 
         _currentCulture = culture;
         ApplyCulture(culture);
+        OnPropertyChanged(nameof(CurrentCulture));
+        OnPropertyChanged("Item[]");
+
+        foreach (var language in Languages)
+        {
+            language.RefreshDisplayName();
+        }
+
         CultureChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -74,5 +84,10 @@ public sealed class LocalizationService
         CultureInfo.CurrentUICulture = culture;
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
+    }
+
+    private void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

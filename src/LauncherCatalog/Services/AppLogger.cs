@@ -62,7 +62,7 @@ public static class AppLogger
         var version = assembly.GetName().Version?.ToString() ?? "unknown";
 
         var builder = new StringBuilder();
-        builder.AppendLine("Launcher Catalog crash log");
+        builder.AppendLine("WorkSync crash log");
         builder.AppendLine("==========================");
         builder.AppendLine($"Time: {timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}");
         builder.AppendLine($"Source: {source}");

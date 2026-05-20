@@ -53,6 +53,6 @@ public partial class HotkeySettingsDialog : Window
 
     private void UpdateShortcutText()
     {
-        ShortcutText.Text = HotkeyText;
+        ShortcutText.Text = HotkeyGesture.FormatForDisplay(HotkeyText);
     }
 }

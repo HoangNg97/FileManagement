@@ -12,13 +12,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Common.AppName" xml:space="preserve"><value>Launcher Catalog</value></data>
+  <data name="Common.AppName" xml:space="preserve"><value>WorkSync</value></data>
   <data name="Common.Ready" xml:space="preserve"><value>準備完了</value></data>
   <data name="Common.LoadingData" xml:space="preserve"><value>データを読み込み中</value></data>
   <data name="Common.Save" xml:space="preserve"><value>保存</value></data>
   <data name="Common.Cancel" xml:space="preserve"><value>キャンセル</value></data>
   <data name="Common.Close" xml:space="preserve"><value>閉じる</value></data>
   <data name="Common.Reset" xml:space="preserve"><value>リセット</value></data>
+  <data name="Common.Restore" xml:space="preserve"><value>復元</value></data>
   <data name="Common.Open" xml:space="preserve"><value>開く</value></data>
   <data name="Common.Edit" xml:space="preserve"><value>編集</value></data>
   <data name="Common.Delete" xml:space="preserve"><value>削除</value></data>
@@ -67,6 +68,28 @@
   <data name="Main.Tooltip.NoteTags" xml:space="preserve"><value>カンマ区切りのタグ 例: 仕事, アイデア, 急ぎ</value></data>
   <data name="Main.Tooltip.NoteBody" xml:space="preserve"><value>ここにメモを書いてください。- [ ] と - [x] の行はプレビューで認識されます。</value></data>
   <data name="Main.QuickSearchTooltip" xml:space="preserve"><value>クイック検索ショートカット: {0}</value></data>
+  <data name="Backup.RestoreLatest.Tooltip" xml:space="preserve"><value>バックアップから復元</value></data>
+  <data name="Backup.RestoreLatest.Title" xml:space="preserve"><value>バックアップを復元</value></data>
+  <data name="Backup.RestoreLatest.Confirm" xml:space="preserve"><value>選択したバックアップからデータを復元しますか？</value></data>
+  <data name="Backup.RestoreLatest.NoBackup" xml:space="preserve"><value>利用できるバックアップが見つかりませんでした。</value></data>
+  <data name="Backup.RestoreLatest.Success" xml:space="preserve"><value>バックアップ {0} からデータを復元しました。</value></data>
+  <data name="Backup.RestoreLatest.Failed" xml:space="preserve"><value>最新バックアップを復元できませんでした。{0}</value></data>
+  <data name="Backup.RestoreDialog.Title" xml:space="preserve"><value>バックアップを復元</value></data>
+  <data name="Backup.RestoreDialog.Heading" xml:space="preserve"><value>バックアップからデータを復元</value></data>
+  <data name="Backup.RestoreDialog.Subtitle" xml:space="preserve"><value>復元したいバックアップ日時を選択してください。選択したバックアップで現在のデータベースファイルを置き換えます。</value></data>
+  <data name="Backup.RestoreDialog.VersionLabel" xml:space="preserve"><value>バックアップ日時</value></data>
+  <data name="Backup.RestoreDialog.SelectVersion" xml:space="preserve"><value>復元するバックアップを選択してください。</value></data>
+  <data name="Backup.RestoreGuide.Title" xml:space="preserve"><value>WorkSync データベースバックアップ</value></data>
+  <data name="Backup.RestoreGuide.BackupRoot" xml:space="preserve"><value>バックアップ保存先: {0}</value></data>
+  <data name="Backup.RestoreGuide.VersionFolders" xml:space="preserve"><value>バックアップ一覧フォルダー: {0}</value></data>
+  <data name="Backup.RestoreGuide.LiveDatabaseFolder" xml:space="preserve"><value>現在のデータベースフォルダー: {0}</value></data>
+  <data name="Backup.RestoreGuide.StepsHeading" xml:space="preserve"><value>復元手順:</value></data>
+  <data name="Backup.RestoreGuide.Step1" xml:space="preserve"><value>1. WorkSync を完全に終了します。</value></data>
+  <data name="Backup.RestoreGuide.Step2" xml:space="preserve"><value>2. Versions フォルダーを開き、復元したいバックアップフォルダーを選びます。</value></data>
+  <data name="Backup.RestoreGuide.Step3" xml:space="preserve"><value>3. そのバックアップフォルダー内の .db ファイルを現在のデータベースフォルダーへコピーします。</value></data>
+  <data name="Backup.RestoreGuide.Step4" xml:space="preserve"><value>4. 既存のファイルをバックアップのコピーで置き換えます。</value></data>
+  <data name="Backup.RestoreGuide.Step5" xml:space="preserve"><value>5. WorkSync を再度起動します。</value></data>
+  <data name="Backup.RestoreGuide.TrackedDatabases" xml:space="preserve"><value>対象データベース:</value></data>
   <data name="Main.ResultCount.EverythingOnly" xml:space="preserve"><value>Everything の結果 {0} 件</value></data>
   <data name="Main.ResultCount.Both" xml:space="preserve"><value>カタログ {0} 件、Everything {1} 件 / 保存済み {2} 件</value></data>
   <data name="Main.ResultCount.CatalogOnly" xml:space="preserve"><value>{1} 件中 {0} 件を表示</value></data>
@@ -229,11 +252,24 @@
   <data name="Settings.Theme.LightEnabled" xml:space="preserve"><value>ライトモードを有効にしました。</value></data>
   <data name="Settings.Language.Updated" xml:space="preserve"><value>言語を {0} に変更しました。</value></data>
   <data name="Settings.Language.SaveFailed" xml:space="preserve"><value>言語は変更されましたが、保存に失敗しました。</value></data>
+  <data name="Hotkey.Modifier.Ctrl" xml:space="preserve"><value>Ctrl</value></data>
+  <data name="Hotkey.Modifier.Alt" xml:space="preserve"><value>Alt</value></data>
+  <data name="Hotkey.Modifier.Shift" xml:space="preserve"><value>Shift</value></data>
+  <data name="Hotkey.Modifier.Win" xml:space="preserve"><value>Win</value></data>
+  <data name="Hotkey.Key.Enter" xml:space="preserve"><value>エンター</value></data>
+  <data name="Hotkey.Key.Esc" xml:space="preserve"><value>エスケープ</value></data>
+  <data name="Hotkey.Key.Space" xml:space="preserve"><value>スペース</value></data>
+  <data name="Hotkey.Key.Plus" xml:space="preserve"><value>プラス</value></data>
+  <data name="Hotkey.Key.Minus" xml:space="preserve"><value>マイナス</value></data>
+  <data name="Hotkey.Key.Comma" xml:space="preserve"><value>カンマ</value></data>
+  <data name="Hotkey.Key.Period" xml:space="preserve"><value>ピリオド</value></data>
   <data name="Picker.SelectFile" xml:space="preserve"><value>開くファイルを選択</value></data>
   <data name="Picker.AllFiles" xml:space="preserve"><value>すべてのファイル (*.*)|*.*</value></data>
   <data name="Picker.SelectFolder" xml:space="preserve"><value>フォルダーを選択</value></data>
   <data name="Tray.Open" xml:space="preserve"><value>開く</value></data>
   <data name="Tray.Quit" xml:space="preserve"><value>終了</value></data>
+  <data name="App.Crash.Title" xml:space="preserve"><value>WorkSync がクラッシュしました</value></data>
+  <data name="App.Crash.Message" xml:space="preserve"><value>WorkSync で予期しないエラーが発生し、クラッシュログを次に保存しました:{0}{0}{1}{0}{0}調査のためこのファイルを送ってください。</value></data>
   <data name="MissingStatus.Ready" xml:space="preserve"><value>準備完了</value></data>
   <data name="MissingStatus.Missing" xml:space="preserve"><value>見つかりません</value></data>
   <data name="Everything.Type.File" xml:space="preserve"><value>Everything ファイル</value></data>

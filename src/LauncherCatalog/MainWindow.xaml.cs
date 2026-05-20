@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private readonly EverythingSearchService _everythingSearchService;
     private readonly Forms.NotifyIcon _trayIcon;
     private readonly TaskReminderService _taskReminderService;
+    private readonly DatabaseBackupService _databaseBackupService;
     private readonly StartupLaunchService _startupLaunchService;
     private readonly GlobalHotkeyService _hotkeyService = new();
     private HwndSource? _hwndSource;
@@ -39,12 +40,14 @@ public partial class MainWindow : Window
         var pathValidationService = new PathValidationService();
         var filePickerService = new FilePickerService();
         var entryDialogService = new EntryDialogService(pathValidationService, filePickerService);
+        var entryRepository = new EntryRepository();
+        var taskRepository = new TaskRepository();
         var noteRepository = new NoteRepository();
         _everythingSearchService = new EverythingSearchService();
 
         _viewModel = new MainViewModel(
-            new EntryRepository(),
-            new TaskRepository(),
+            entryRepository,
+            taskRepository,
             noteRepository,
             new LauncherService(),
             pathValidationService,
@@ -55,7 +58,14 @@ public partial class MainWindow : Window
             entryDialogService,
             new TaskDialogService(),
             () => this);
-        _taskRepository = new TaskRepository();
+        _taskRepository = taskRepository;
+        _databaseBackupService = new DatabaseBackupService(
+            Path.GetDirectoryName(entryRepository.StoragePath) ?? string.Empty,
+            [
+                DatabaseBackupTarget.FromPath(entryRepository.StoragePath),
+                DatabaseBackupTarget.FromPath(taskRepository.StoragePath),
+                DatabaseBackupTarget.FromPath(noteRepository.StoragePath)
+            ]);
         _startupLaunchService = new StartupLaunchService();
 
         DataContext = _viewModel;
@@ -86,6 +96,7 @@ public partial class MainWindow : Window
         }
 
         await _viewModel.LoadAsync();
+        _databaseBackupService.Start();
         _startupLaunchService.EnsureEnabled();
         _ = _everythingSearchService.EnsureStartedAsync();
         _taskReminderService.Start();
@@ -172,6 +183,7 @@ public partial class MainWindow : Window
         _hwndSource?.RemoveHook(WndProc);
         _hotkeyService.Dispose();
         _taskReminderService.Dispose();
+        _databaseBackupService.Dispose();
         _trayIcon.Visible = false;
         _trayIcon.Dispose();
     }
@@ -238,6 +250,63 @@ public partial class MainWindow : Window
         await _viewModel.UpdateQuickSearchHotkeyAsync(dialog.HotkeyText);
     }
 
+    private async void RestoreLatestBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var localizer = LocalizationService.Current;
+        var availableVersions = _databaseBackupService.GetAvailableBackupVersions();
+        if (availableVersions.Count == 0)
+        {
+            var noBackupMessage = localizer.Get("Backup.RestoreLatest.NoBackup");
+            _viewModel.StatusMessage = noBackupMessage;
+            System.Windows.MessageBox.Show(this, noBackupMessage, localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new RestoreBackupDialog(availableVersions)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true || dialog.SelectedVersion is null)
+        {
+            return;
+        }
+
+        _viewModel.PrepareForDatabaseRestore();
+        _taskReminderService.Stop();
+        _databaseBackupService.Stop();
+
+        try
+        {
+            var result = await _databaseBackupService.RestoreAsync(dialog.SelectedVersion.VersionName);
+            if (!result.IsSuccess)
+            {
+                var noBackupMessage = localizer.Get("Backup.RestoreLatest.NoBackup");
+                _viewModel.StatusMessage = noBackupMessage;
+                System.Windows.MessageBox.Show(this, noBackupMessage, localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            await _viewModel.LoadAsync();
+            RegisterQuickSearchHotkey(showWarning: false);
+
+            var successMessage = localizer.Format("Backup.RestoreLatest.Success", result.VersionName ?? string.Empty);
+            _viewModel.StatusMessage = successMessage;
+            System.Windows.MessageBox.Show(this, successMessage, localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception exception)
+        {
+            AppLogger.WriteInfo($"Latest backup restore failed: {exception.Message}");
+            var failureMessage = localizer.Format("Backup.RestoreLatest.Failed", exception.Message);
+            _viewModel.StatusMessage = failureMessage;
+            System.Windows.MessageBox.Show(this, failureMessage, localizer.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        finally
+        {
+            _taskReminderService.Start();
+            _databaseBackupService.Start();
+        }
+    }
+
     private void ShowQuickSearch()
     {
         Dispatcher.Invoke(() =>
@@ -276,7 +345,7 @@ public partial class MainWindow : Window
             return true;
         }
 
-        var message = LocalizationService.Current.Format("Settings.Hotkey.InUse", gesture);
+        var message = LocalizationService.Current.Format("Settings.Hotkey.InUse", gesture.ToDisplayString());
         _viewModel.StatusMessage = message;
 
         if (showWarning)

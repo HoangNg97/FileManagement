@@ -38,7 +38,7 @@
         </Style>
 
         <Style x:Key="TitleBarLanguageButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SecondaryButtonStyle}">
-            <Setter Property="Width" Value="58" />
+            <Setter Property="Width" Value="76" />
             <Setter Property="Height" Value="34" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="FontSize" Value="12" />
@@ -513,6 +513,11 @@
                         Click="ShortcutSettings_Click"
                         Margin="0,0,10,0"
                         ToolTip="{Binding QuickSearchHotkeyToolTip}" />
+                <Button Style="{StaticResource IconButtonStyle}"
+                        Content="&#xE777;"
+                        Click="RestoreLatestBackup_Click"
+                        Margin="0,0,10,0"
+                        ToolTip="{loc:Loc Backup.RestoreLatest.Tooltip}" />
                 <Button Style="{StaticResource PrimaryButtonStyle}"
                         Command="{Binding AddAppCommand}"
                         MinWidth="118"
@@ -1302,8 +1307,6 @@
                         <ColumnDefinition Width="300" />
                         <ColumnDefinition Width="18" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="18" />
-                        <ColumnDefinition Width="320" />
                     </Grid.ColumnDefinitions>
 
                     <Border Background="{DynamicResource SurfaceBrush}"
@@ -1563,141 +1566,6 @@
                         </Grid>
                     </Border>
 
-                    <Border Grid.Column="4"
-                            Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="12"
-                            Padding="18">
-                        <Grid>
-                            <Grid Visibility="{Binding SelectedNote, Converter={StaticResource NotNullToVisibilityConverter}}">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="12" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="14" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-
-                                <StackPanel>
-                                    <TextBlock Text="{loc:Loc Main.Note.PreviewTitle}"
-                                               FontSize="24"
-                                               FontWeight="SemiBold" />
-                                    <TextBlock Text="{loc:Loc Main.Note.PreviewSubtitle}"
-                                               Margin="0,4,0,0"
-                                               Foreground="{DynamicResource MutedTextBrush}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-
-                                <Border Grid.Row="2"
-                                        Background="{DynamicResource ControlMutedBrush}"
-                                        BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="10"
-                                        Padding="14">
-                                    <StackPanel>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{loc:Loc Common.Created}"
-                                                       Foreground="{DynamicResource MutedTextBrush}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="16,0,0,0"
-                                                       Text="{Binding SelectedNoteCreatedText}" />
-                                        </Grid>
-                                        <Grid Margin="0,6,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{loc:Loc Common.Updated}"
-                                                       Foreground="{DynamicResource MutedTextBrush}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="16,0,0,0"
-                                                       Text="{Binding SelectedNoteUpdatedText}" />
-                                        </Grid>
-                                        <Grid Margin="0,6,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{loc:Loc Common.LastViewed}"
-                                                       Foreground="{DynamicResource MutedTextBrush}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="16,0,0,0"
-                                                       Text="{Binding SelectedNoteLastViewedText}" />
-                                        </Grid>
-                                        <Grid Margin="0,6,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{loc:Loc Common.Words}"
-                                                       Foreground="{DynamicResource MutedTextBrush}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="16,0,0,0"
-                                                       Text="{Binding SelectedNoteWordCountText}" />
-                                        </Grid>
-                                        <Grid Margin="0,6,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{loc:Loc Common.Checklist}"
-                                                       Foreground="{DynamicResource MutedTextBrush}" />
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="16,0,0,0"
-                                                       Text="{Binding SelectedNoteChecklistSummaryText}" />
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-
-                                <ScrollViewer Grid.Row="4"
-                                              VerticalScrollBarVisibility="Auto"
-                                              HorizontalScrollBarVisibility="Disabled">
-                                    <ItemsControl ItemsSource="{Binding SelectedNotePreviewLines}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,0,0,8">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="22" />
-                                                        <ColumnDefinition Width="*" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding Glyph}"
-                                                               Foreground="{DynamicResource AccentBrush}"
-                                                               VerticalAlignment="Top"
-                                                               FontWeight="SemiBold" />
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding Text}"
-                                                               TextWrapping="Wrap"
-                                                               FontWeight="{Binding FontWeight}"
-                                                               FontSize="{Binding FontSize}"
-                                                               Opacity="{Binding Opacity}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                            </Grid>
-
-                            <StackPanel Visibility="{Binding SelectedNote, Converter={StaticResource NullToVisibilityConverter}}"
-                                        VerticalAlignment="Center"
-                                        HorizontalAlignment="Center"
-                                        MaxWidth="260">
-                                <TextBlock Text="{loc:Loc Main.Note.PreviewEmptyTitle}"
-                                           FontSize="18"
-                                           FontWeight="SemiBold"
-                                           TextAlignment="Center" />
-                                <TextBlock Text="{loc:Loc Main.Note.PreviewEmptyMessage}"
-                                           Margin="0,8,0,0"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
                 </Grid>
             </TabItem>
         </TabControl>

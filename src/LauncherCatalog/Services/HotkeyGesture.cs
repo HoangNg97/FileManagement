@@ -6,29 +6,65 @@ public sealed record HotkeyGesture(ModifierKeys Modifiers, Key Key)
 {
     public override string ToString()
     {
+        return BuildText(
+            "Ctrl",
+            "Alt",
+            "Shift",
+            "Win",
+            KeyToInvariantText);
+    }
+
+    public string ToDisplayString()
+    {
+        var localizer = LocalizationService.Current;
+        return BuildText(
+            localizer.Get("Hotkey.Modifier.Ctrl"),
+            localizer.Get("Hotkey.Modifier.Alt"),
+            localizer.Get("Hotkey.Modifier.Shift"),
+            localizer.Get("Hotkey.Modifier.Win"),
+            KeyToDisplayText);
+    }
+
+    public static string FormatForDisplay(string? value)
+    {
+        if (TryParse(value, out var gesture))
+        {
+            return gesture.ToDisplayString();
+        }
+
+        return value ?? string.Empty;
+    }
+
+    private string BuildText(
+        string ctrlText,
+        string altText,
+        string shiftText,
+        string winText,
+        Func<Key, string> keyFormatter)
+    {
         var parts = new List<string>();
 
         if (Modifiers.HasFlag(ModifierKeys.Control))
         {
-            parts.Add("Ctrl");
+            parts.Add(ctrlText);
         }
 
         if (Modifiers.HasFlag(ModifierKeys.Alt))
         {
-            parts.Add("Alt");
+            parts.Add(altText);
         }
 
         if (Modifiers.HasFlag(ModifierKeys.Shift))
         {
-            parts.Add("Shift");
+            parts.Add(shiftText);
         }
 
         if (Modifiers.HasFlag(ModifierKeys.Windows))
         {
-            parts.Add("Win");
+            parts.Add(winText);
         }
 
-        parts.Add(KeyToText(Key));
+        parts.Add(keyFormatter(Key));
         return string.Join("+", parts);
     }
 
@@ -107,7 +143,7 @@ public sealed record HotkeyGesture(ModifierKeys Modifiers, Key Key)
             or Key.RWin;
     }
 
-    private static string KeyToText(Key key)
+    private static string KeyToInvariantText(Key key)
     {
         return key switch
         {
@@ -118,6 +154,22 @@ public sealed record HotkeyGesture(ModifierKeys Modifiers, Key Key)
             Key.OemMinus => "Minus",
             Key.OemComma => "Comma",
             Key.OemPeriod => "Period",
+            _ => key.ToString()
+        };
+    }
+
+    private static string KeyToDisplayText(Key key)
+    {
+        var localizer = LocalizationService.Current;
+        return key switch
+        {
+            Key.Return => localizer.Get("Hotkey.Key.Enter"),
+            Key.Escape => localizer.Get("Hotkey.Key.Esc"),
+            Key.Space => localizer.Get("Hotkey.Key.Space"),
+            Key.OemPlus => localizer.Get("Hotkey.Key.Plus"),
+            Key.OemMinus => localizer.Get("Hotkey.Key.Minus"),
+            Key.OemComma => localizer.Get("Hotkey.Key.Comma"),
+            Key.OemPeriod => localizer.Get("Hotkey.Key.Period"),
             _ => key.ToString()
         };
     }
