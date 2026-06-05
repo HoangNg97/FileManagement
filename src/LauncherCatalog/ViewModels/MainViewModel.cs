@@ -45,6 +45,8 @@ public sealed class MainViewModel : ObservableObject
     private CancellationTokenSource? _iconLoadCts;
     private CancellationTokenSource? _missingStateRefreshCts;
     private CancellationTokenSource? _noteSaveCts;
+    private readonly Dictionary<Guid, TaskItem> _taskLookup = [];
+    private readonly List<TaskItem> _taskRoots = [];
     private int _resultCount;
     private int _everythingResultCount;
     private int _visibleNoteCount;
@@ -136,9 +138,12 @@ public sealed class MainViewModel : ObservableObject
         RevealEverythingResultCommand = new RelayCommand(RevealEverythingResult, parameter => parameter is EverythingResult);
         CopyEverythingPathCommand = new RelayCommand(CopyEverythingPath, parameter => parameter is EverythingResult);
         CreateTaskCommand = new AsyncRelayCommand(CreateTaskAsync);
-        MarkTaskCompletedCommand = new AsyncRelayCommand(MarkTaskCompletedAsync, parameter => parameter is TaskItem task && !task.IsCompleted);
-        EditTaskCommand = new AsyncRelayCommand(EditTaskAsync, parameter => parameter is TaskItem);
-        ToggleTaskNotificationsCommand = new AsyncRelayCommand(ToggleTaskNotificationsAsync, parameter => parameter is TaskItem);
+        AddSubtaskCommand = new AsyncRelayCommand(AddSubtaskAsync, parameter => parameter is TaskItem task && !task.IsDraft);
+        MarkTaskCompletedCommand = new AsyncRelayCommand(MarkTaskCompletedAsync, parameter => parameter is TaskItem task && task.ShowMarkCompletedButton);
+        EditTaskCommand = new AsyncRelayCommand(EditTaskAsync, parameter => parameter is TaskItem task && !task.IsSubtask && !task.IsDraft);
+        BeginInlineRenameTaskCommand = new RelayCommand(BeginInlineRenameTask, parameter => parameter is TaskItem task && !task.IsDraft);
+        ToggleTaskExpansionCommand = new RelayCommand(ToggleTaskExpansion, parameter => parameter is TaskItem task && task.HasChildren);
+        ToggleTaskNotificationsCommand = new AsyncRelayCommand(ToggleTaskNotificationsAsync, parameter => parameter is TaskItem task && !task.IsSubtask && !task.IsDraft);
         CreateNoteCommand = new AsyncRelayCommand(CreateNoteAsync);
         DeleteNoteCommand = new AsyncRelayCommand(DeleteNoteAsync, parameter => parameter is NoteItem || SelectedNote is not null);
         ToggleNoteFavoriteCommand = new AsyncRelayCommand(ToggleNoteFavoriteAsync, parameter => parameter is NoteItem || SelectedNote is not null);
@@ -172,8 +177,11 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand RevealEverythingResultCommand { get; }
     public RelayCommand CopyEverythingPathCommand { get; }
     public AsyncRelayCommand CreateTaskCommand { get; }
+    public AsyncRelayCommand AddSubtaskCommand { get; }
     public AsyncRelayCommand MarkTaskCompletedCommand { get; }
     public AsyncRelayCommand EditTaskCommand { get; }
+    public RelayCommand BeginInlineRenameTaskCommand { get; }
+    public RelayCommand ToggleTaskExpansionCommand { get; }
     public AsyncRelayCommand ToggleTaskNotificationsCommand { get; }
     public AsyncRelayCommand CreateNoteCommand { get; }
     public AsyncRelayCommand DeleteNoteCommand { get; }
@@ -465,11 +473,7 @@ public sealed class MainViewModel : ObservableObject
                 Entries.Add(entry);
             }
 
-            Tasks.Clear();
-            foreach (var task in loadedTasks)
-            {
-                Tasks.Add(task);
-            }
+            ApplyTaskHierarchy(loadedTasks);
 
             Notes.Clear();
             foreach (var note in loadedNotes)
@@ -514,6 +518,56 @@ public sealed class MainViewModel : ObservableObject
         StatusMessage = _localizer.Get("Task.Message.Created");
     }
 
+    private Task AddSubtaskAsync(object? parameter)
+    {
+        if (parameter is not TaskItem parentTask)
+        {
+            return Task.CompletedTask;
+        }
+
+        var existingDraft = parentTask.Children.FirstOrDefault(child => child.IsDraft);
+        if (existingDraft is not null)
+        {
+            existingDraft.IsEditingTitle = true;
+            RebuildVisibleTasks();
+            return Task.CompletedTask;
+        }
+
+        var now = DateTime.Now;
+        var subtask = new TaskItem
+        {
+            Id = Guid.NewGuid(),
+            Title = string.Empty,
+            EditTitle = string.Empty,
+            ParentTaskId = parentTask.Id,
+            Parent = parentTask,
+            Description = null,
+            DueDate = null,
+            Status = Models.TaskStatus.Todo,
+            Priority = parentTask.Priority,
+            IsCompleted = false,
+            NotificationsEnabled = false,
+            CompletedAt = null,
+            CreatedAt = now,
+            UpdatedAt = now,
+            SortOrder = parentTask.Children
+                .Where(child => !child.IsDraft)
+                .Select(child => child.SortOrder)
+                .DefaultIfEmpty(-1)
+                .Max() + 1,
+            Depth = parentTask.Depth + 1,
+            IsExpanded = true,
+            IsDraft = true,
+            IsEditingTitle = true,
+            ShouldAnimateIn = true
+        };
+
+        parentTask.Children.Add(subtask);
+        parentTask.IsExpanded = true;
+        RebuildVisibleTasks();
+        return Task.CompletedTask;
+    }
+
     private async Task MarkTaskCompletedAsync(object? parameter)
     {
         if (parameter is not TaskItem task)
@@ -521,7 +575,7 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
-        await DeleteTaskAsync(task);
+        await UpdateTaskStatusAsync(task, Models.TaskStatus.Done);
     }
 
     private async Task EditTaskAsync(object? parameter)
@@ -537,6 +591,15 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        editedTask.ParentTaskId = task.ParentTaskId;
+        editedTask.SortOrder = task.SortOrder;
+        if (task.HasChildren)
+        {
+            editedTask.Status = task.Status;
+            editedTask.IsCompleted = task.IsCompleted;
+            editedTask.CompletedAt = task.CompletedAt;
+        }
+
         await _taskRepository.UpdateAsync(editedTask);
         await RefreshTasksAsync();
         StatusMessage = _localizer.Format("Task.Message.Updated", editedTask.Title);
@@ -545,19 +608,16 @@ public sealed class MainViewModel : ObservableObject
     private async Task RefreshTasksAsync()
     {
         var loadedTasks = await _taskRepository.LoadAsync();
-        Tasks.Clear();
-        foreach (var task in loadedTasks)
-        {
-            Tasks.Add(task);
-        }
-
-        MarkTaskCompletedCommand.RaiseCanExecuteChanged();
-        EditTaskCommand.RaiseCanExecuteChanged();
-        ToggleTaskNotificationsCommand.RaiseCanExecuteChanged();
+        ApplyTaskHierarchy(loadedTasks);
     }
 
     public async Task UpdateTaskStatusAsync(TaskItem task, Models.TaskStatus status)
     {
+        if (task.HasChildren || task.IsDraft)
+        {
+            return;
+        }
+
         task.Status = status;
         task.IsCompleted = status == Models.TaskStatus.Done;
         task.CompletedAt = status == Models.TaskStatus.Done
@@ -566,33 +626,41 @@ public sealed class MainViewModel : ObservableObject
         task.UpdatedAt = DateTime.Now;
 
         await _taskRepository.UpdateAsync(task);
-        await RefreshTasksAsync();
+        var ancestorUpdates = RefreshDerivedStatuses(task.Parent);
+        await PersistTasksAsync(ancestorUpdates);
+        RebuildVisibleTasks();
         StatusMessage = _localizer.Format("Task.Message.StatusUpdated", task.Title);
     }
 
     public async Task UpdateTaskDueDateAsync(TaskItem task, DateTime dueDate)
     {
+        if (task.IsSubtask || task.IsDraft)
+        {
+            return;
+        }
+
         task.DueDate = dueDate.Date;
         task.UpdatedAt = DateTime.Now;
 
         await _taskRepository.UpdateAsync(task);
-        await RefreshTasksAsync();
         StatusMessage = _localizer.Format("Task.Message.DueDateUpdated", task.Title);
     }
 
     public async Task DeleteTaskAsync(TaskItem task)
     {
-        await _taskRepository.DeleteAsync(task.Id);
-
-        var existingTask = Tasks.FirstOrDefault(item => item.Id == task.Id);
-        if (existingTask is not null)
+        if (task.IsDraft)
         {
-            Tasks.Remove(existingTask);
+            RemoveTaskFromHierarchy(task);
+            RebuildVisibleTasks();
+            return;
         }
 
-        MarkTaskCompletedCommand.RaiseCanExecuteChanged();
-        EditTaskCommand.RaiseCanExecuteChanged();
-        ToggleTaskNotificationsCommand.RaiseCanExecuteChanged();
+        await _taskRepository.DeleteAsync(task.Id);
+        var parentTask = task.Parent;
+        RemoveTaskFromHierarchy(task);
+        var ancestorUpdates = RefreshDerivedStatuses(parentTask);
+        await PersistTasksAsync(ancestorUpdates);
+        RebuildVisibleTasks();
         StatusMessage = _localizer.Format("Task.Message.Removed", task.Title);
     }
 
@@ -604,11 +672,299 @@ public sealed class MainViewModel : ObservableObject
         }
 
         var notificationsEnabled = !task.NotificationsEnabled;
+        task.NotificationsEnabled = notificationsEnabled;
+        task.UpdatedAt = DateTime.Now;
         await _taskRepository.UpdateNotificationStateAsync(task.Id, notificationsEnabled);
-        await RefreshTasksAsync();
         StatusMessage = notificationsEnabled
             ? _localizer.Format("Task.Message.NotificationsEnabled", task.Title)
             : _localizer.Format("Task.Message.NotificationsDisabled", task.Title);
+    }
+
+    public IReadOnlyList<TaskItem> GetAllTasksSnapshot()
+    {
+        return _taskLookup.Values
+            .Where(task => !task.IsDraft)
+            .ToList();
+    }
+
+    public void BeginInlineRenameTask(object? parameter)
+    {
+        if (parameter is not TaskItem task || task.IsDraft)
+        {
+            return;
+        }
+
+        task.EditTitle = task.Title;
+        task.IsEditingTitle = true;
+    }
+
+    public async Task CommitTaskTitleEditAsync(TaskItem task)
+    {
+        var title = task.EditTitle.Trim();
+        if (task.IsDraft)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                RemoveTaskFromHierarchy(task);
+                RebuildVisibleTasks();
+                return;
+            }
+
+            task.Title = title;
+            task.IsDraft = false;
+            task.IsEditingTitle = false;
+            task.ShouldAnimateIn = false;
+            task.UpdatedAt = DateTime.Now;
+            _taskLookup[task.Id] = task;
+            await _taskRepository.CreateAsync(task);
+            var ancestorUpdates = RefreshDerivedStatuses(task.Parent);
+            await PersistTasksAsync(ancestorUpdates);
+            RebuildVisibleTasks();
+            StatusMessage = _localizer.Get("Task.Message.Created");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            task.EditTitle = task.Title;
+            task.IsEditingTitle = false;
+            return;
+        }
+
+        if (string.Equals(title, task.Title, StringComparison.Ordinal))
+        {
+            task.IsEditingTitle = false;
+            return;
+        }
+
+        task.Title = title;
+        task.IsEditingTitle = false;
+        task.UpdatedAt = DateTime.Now;
+        await _taskRepository.UpdateAsync(task);
+        StatusMessage = _localizer.Format("Task.Message.Updated", task.Title);
+    }
+
+    public void CancelTaskTitleEdit(TaskItem task)
+    {
+        if (task.IsDraft)
+        {
+            RemoveTaskFromHierarchy(task);
+            RebuildVisibleTasks();
+            return;
+        }
+
+        task.EditTitle = task.Title;
+        task.IsEditingTitle = false;
+    }
+
+    public void ToggleTaskExpansion(object? parameter)
+    {
+        if (parameter is not TaskItem task || !task.HasChildren)
+        {
+            return;
+        }
+
+        task.IsExpanded = !task.IsExpanded;
+        RebuildVisibleTasks();
+    }
+
+    private void ApplyTaskHierarchy(IReadOnlyList<TaskItem> loadedTasks)
+    {
+        var expansionState = _taskLookup.ToDictionary(pair => pair.Key, pair => pair.Value.IsExpanded);
+
+        _taskLookup.Clear();
+        _taskRoots.Clear();
+
+        foreach (var task in loadedTasks)
+        {
+            task.Parent = null;
+            task.Children.Clear();
+            task.Depth = 0;
+            task.IsEditingTitle = false;
+            task.IsDraft = false;
+            task.ShouldAnimateIn = false;
+            task.EditTitle = task.Title;
+            _taskLookup[task.Id] = task;
+        }
+
+        foreach (var task in loadedTasks)
+        {
+            if (task.ParentTaskId is Guid parentId && _taskLookup.TryGetValue(parentId, out var parentTask))
+            {
+                task.Parent = parentTask;
+                parentTask.Children.Add(task);
+            }
+            else
+            {
+                task.ParentTaskId = null;
+                _taskRoots.Add(task);
+            }
+        }
+
+        foreach (var rootTask in _taskRoots)
+        {
+            AssignTaskDepth(rootTask, 0);
+            NormalizeBranchStatus(rootTask);
+        }
+
+        foreach (var task in _taskLookup.Values)
+        {
+            task.IsExpanded = expansionState.TryGetValue(task.Id, out var isExpanded)
+                ? isExpanded
+                : !task.IsCompleted;
+            task.RaiseHierarchyProperties();
+        }
+
+        RebuildVisibleTasks();
+    }
+
+    private void AssignTaskDepth(TaskItem task, int depth)
+    {
+        task.Depth = depth;
+        foreach (var child in task.Children)
+        {
+            AssignTaskDepth(child, depth + 1);
+        }
+    }
+
+    private bool NormalizeBranchStatus(TaskItem task)
+    {
+        if (!task.HasChildren)
+        {
+            task.IsCompleted = task.Status == Models.TaskStatus.Done;
+            task.CompletedAt = task.IsCompleted
+                ? (task.CompletedAt ?? DateTime.Now)
+                : null;
+            return task.IsCompleted;
+        }
+
+        var allChildrenDone = true;
+        foreach (var child in task.Children)
+        {
+            allChildrenDone &= NormalizeBranchStatus(child);
+        }
+
+        task.Status = allChildrenDone ? Models.TaskStatus.Done : Models.TaskStatus.Ongoing;
+        task.IsCompleted = allChildrenDone;
+        task.CompletedAt = allChildrenDone
+            ? (task.CompletedAt ?? DateTime.Now)
+            : null;
+        return allChildrenDone;
+    }
+
+    private void RebuildVisibleTasks()
+    {
+        Tasks.Clear();
+        foreach (var rootTask in _taskRoots)
+        {
+            AddVisibleTask(rootTask);
+        }
+
+        RaiseTaskCommandsChanged();
+    }
+
+    private void AddVisibleTask(TaskItem task)
+    {
+        Tasks.Add(task);
+        if (!task.HasChildren || !task.IsExpanded)
+        {
+            return;
+        }
+
+        foreach (var child in task.Children)
+        {
+            AddVisibleTask(child);
+        }
+    }
+
+    private List<TaskItem> RefreshDerivedStatuses(TaskItem? task)
+    {
+        var changedTasks = new List<TaskItem>();
+        while (task is not null)
+        {
+            if (ApplyDerivedStatus(task))
+            {
+                task.UpdatedAt = DateTime.Now;
+                changedTasks.Add(task);
+            }
+
+            task = task.Parent;
+        }
+
+        return changedTasks;
+    }
+
+    private static bool ApplyDerivedStatus(TaskItem task)
+    {
+        if (!task.HasChildren)
+        {
+            return false;
+        }
+
+        var allChildrenDone = task.Children.All(child => child.IsCompleted);
+        var nextStatus = allChildrenDone ? Models.TaskStatus.Done : Models.TaskStatus.Ongoing;
+        DateTime? nextCompletedAt = allChildrenDone
+            ? (task.CompletedAt ?? DateTime.Now)
+            : null;
+        var hasChanged = task.Status != nextStatus
+            || task.IsCompleted != allChildrenDone
+            || task.CompletedAt != nextCompletedAt;
+
+        task.Status = nextStatus;
+        task.IsCompleted = allChildrenDone;
+        task.CompletedAt = nextCompletedAt;
+        if (allChildrenDone)
+        {
+            task.IsExpanded = false;
+        }
+        else
+        {
+            task.IsExpanded = true;
+        }
+
+        return hasChanged;
+    }
+
+    private async Task PersistTasksAsync(IEnumerable<TaskItem> tasks)
+    {
+        foreach (var task in tasks)
+        {
+            await _taskRepository.UpdateAsync(task);
+        }
+    }
+
+    private void RemoveTaskFromHierarchy(TaskItem task)
+    {
+        if (task.Parent is not null)
+        {
+            task.Parent.Children.Remove(task);
+        }
+        else
+        {
+            _taskRoots.Remove(task);
+        }
+
+        RemoveTaskLookupBranch(task);
+        task.Parent = null;
+    }
+
+    private void RemoveTaskLookupBranch(TaskItem task)
+    {
+        foreach (var child in task.Children.ToList())
+        {
+            RemoveTaskLookupBranch(child);
+        }
+
+        _taskLookup.Remove(task.Id);
+    }
+
+    private void RaiseTaskCommandsChanged()
+    {
+        AddSubtaskCommand.RaiseCanExecuteChanged();
+        MarkTaskCompletedCommand.RaiseCanExecuteChanged();
+        EditTaskCommand.RaiseCanExecuteChanged();
+        ToggleTaskNotificationsCommand.RaiseCanExecuteChanged();
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private async Task CreateNoteAsync()
@@ -1750,7 +2106,7 @@ public sealed class MainViewModel : ObservableObject
             entry.RefreshLocalizedProperties();
         }
 
-        foreach (var task in Tasks)
+        foreach (var task in GetAllTasksSnapshot())
         {
             task.RefreshLocalizedProperties();
         }

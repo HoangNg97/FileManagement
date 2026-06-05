@@ -9,6 +9,7 @@ using System.Windows.Interop;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using LauncherCatalog.Models;
 using LauncherCatalog.Services;
 using LauncherCatalog.ViewModels;
@@ -64,7 +65,8 @@ public partial class MainWindow : Window
             [
                 DatabaseBackupTarget.FromPath(entryRepository.StoragePath),
                 DatabaseBackupTarget.FromPath(taskRepository.StoragePath),
-                DatabaseBackupTarget.FromPath(noteRepository.StoragePath)
+                DatabaseBackupTarget.FromPath(noteRepository.StoragePath),
+                DatabaseBackupTarget.FromPath(HistoryRepository.DefaultStoragePath)
             ]);
         _startupLaunchService = new StartupLaunchService();
 
@@ -78,7 +80,7 @@ public partial class MainWindow : Window
         _trayIcon = CreateTrayIcon();
         _taskReminderService = new TaskReminderService(
             _taskRepository,
-            () => _viewModel.Tasks.ToList(),
+            () => _viewModel.GetAllTasksSnapshot(),
             ShowTaskReminderNotification);
         _hotkeyService.HotkeyPressed += (_, _) => ShowQuickSearch();
     }
@@ -507,6 +509,93 @@ public partial class MainWindow : Window
             AppLogger.WriteInfo($"Task removal failed: {exception.Message}");
             System.Windows.MessageBox.Show(this, LocalizationService.Current.Get("Task.Message.RemoveFailed"), LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
+    }
+
+    private void TaskRow_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Border rowBorder
+            || rowBorder.DataContext is not TaskItem task
+            || !task.ShouldAnimateIn)
+        {
+            return;
+        }
+
+        task.ShouldAnimateIn = false;
+        rowBorder.Opacity = 0;
+        rowBorder.RenderTransform = new TranslateTransform(0, 10);
+
+        var storyboard = new Storyboard();
+        var duration = new Duration(TimeSpan.FromMilliseconds(180));
+
+        var opacityAnimation = new DoubleAnimation(0, 1, duration)
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        Storyboard.SetTarget(opacityAnimation, rowBorder);
+        Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath(UIElement.OpacityProperty));
+        storyboard.Children.Add(opacityAnimation);
+
+        var slideAnimation = new DoubleAnimation(10, 0, duration)
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        Storyboard.SetTarget(slideAnimation, rowBorder);
+        Storyboard.SetTargetProperty(slideAnimation, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.Y)"));
+        storyboard.Children.Add(slideAnimation);
+
+        storyboard.Begin();
+    }
+
+    private void TaskTitleEditor_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.TextBox textBox
+            || textBox.DataContext is not TaskItem task
+            || !task.ShowInlineEditor
+            || !textBox.IsVisible)
+        {
+            return;
+        }
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            textBox.Focus();
+            textBox.SelectAll();
+        }, DispatcherPriority.Input);
+    }
+
+    private async void TaskTitleEditor_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.TextBox textBox
+            || textBox.DataContext is not TaskItem task)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            await _viewModel.CommitTaskTitleEditAsync(task);
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            _viewModel.CancelTaskTitleEdit(task);
+        }
+    }
+
+    private async void TaskTitleEditor_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.TextBox textBox
+            || textBox.DataContext is not TaskItem task
+            || !task.ShowInlineEditor
+            || !textBox.IsVisible)
+        {
+            return;
+        }
+
+        await _viewModel.CommitTaskTitleEditAsync(task);
     }
 
     private async void TaskStatusOption_Click(object sender, RoutedEventArgs e)

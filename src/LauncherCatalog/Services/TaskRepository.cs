@@ -50,7 +50,8 @@ public sealed class TaskRepository
                    completed_at,
                    created_at,
                    updated_at,
-                   sort_order
+                   sort_order,
+                   parent_task_id
             FROM tasks
             ORDER BY is_completed ASC, due_date IS NULL ASC, due_date ASC, sort_order ASC, created_at ASC;
             """;
@@ -72,7 +73,8 @@ public sealed class TaskRepository
                 CompletedAt = ParseDate(ReadString(reader, 9)),
                 CreatedAt = ParseDate(ReadString(reader, 10)) ?? DateTime.Now,
                 UpdatedAt = ParseDate(ReadString(reader, 11)) ?? DateTime.Now,
-                SortOrder = reader.IsDBNull(12) ? 0 : reader.GetInt32(12)
+                SortOrder = reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
+                ParentTaskId = ParseGuid(ReadString(reader, 13))
             });
         }
 
@@ -99,7 +101,8 @@ public sealed class TaskRepository
                 completed_at,
                 created_at,
                 updated_at,
-                sort_order
+                sort_order,
+                parent_task_id
             )
             VALUES (
                 $id,
@@ -114,7 +117,8 @@ public sealed class TaskRepository
                 $completedAt,
                 $createdAt,
                 $updatedAt,
-                $sortOrder
+                $sortOrder,
+                $parentTaskId
             );
             """;
 
@@ -131,6 +135,7 @@ public sealed class TaskRepository
         command.Parameters.AddWithValue("$createdAt", task.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$updatedAt", task.UpdatedAt.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$sortOrder", task.SortOrder);
+        command.Parameters.AddWithValue("$parentTaskId", ToDbValue(task.ParentTaskId?.ToString()));
         await command.ExecuteNonQueryAsync();
     }
 
@@ -141,8 +146,19 @@ public sealed class TaskRepository
 
         await using var command = connection.CreateCommand();
         command.CommandText = """
+            WITH RECURSIVE task_tree(id) AS (
+                SELECT id
+                FROM tasks
+                WHERE id = $id
+
+                UNION ALL
+
+                SELECT child.id
+                FROM tasks child
+                INNER JOIN task_tree parent ON child.parent_task_id = parent.id
+            )
             DELETE FROM tasks
-            WHERE id = $id;
+            WHERE id IN (SELECT id FROM task_tree);
             """;
         command.Parameters.AddWithValue("$id", id.ToString());
         await command.ExecuteNonQueryAsync();
@@ -169,7 +185,9 @@ public sealed class TaskRepository
                 notifications_enabled = $notificationsEnabled,
                 last_reminder_key = $lastReminderKey,
                 completed_at = $completedAt,
-                updated_at = $updatedAt
+                updated_at = $updatedAt,
+                sort_order = $sortOrder,
+                parent_task_id = $parentTaskId
             WHERE id = $id;
             """;
         command.Parameters.AddWithValue("$id", task.Id.ToString());
@@ -183,6 +201,8 @@ public sealed class TaskRepository
         command.Parameters.AddWithValue("$lastReminderKey", ToDbValue(task.LastReminderKey));
         command.Parameters.AddWithValue("$completedAt", ToDbValue(completedAt?.ToString("O", CultureInfo.InvariantCulture)));
         command.Parameters.AddWithValue("$updatedAt", now.ToString("O", CultureInfo.InvariantCulture));
+        command.Parameters.AddWithValue("$sortOrder", task.SortOrder);
+        command.Parameters.AddWithValue("$parentTaskId", ToDbValue(task.ParentTaskId?.ToString()));
         await command.ExecuteNonQueryAsync();
     }
 
@@ -256,7 +276,8 @@ public sealed class TaskRepository
                 completed_at TEXT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                sort_order INTEGER NOT NULL DEFAULT 0
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                parent_task_id TEXT NULL
             );
 
             CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
@@ -270,6 +291,13 @@ public sealed class TaskRepository
 
         await EnsureColumnAsync(connection, "tasks", "notifications_enabled", "INTEGER NOT NULL DEFAULT 1");
         await EnsureColumnAsync(connection, "tasks", "last_reminder_key", "TEXT NULL");
+        await EnsureColumnAsync(connection, "tasks", "parent_task_id", "TEXT NULL");
+
+        await using var parentIndexCommand = connection.CreateCommand();
+        parentIndexCommand.CommandText = """
+            CREATE INDEX IF NOT EXISTS idx_tasks_parent_task_id ON tasks(parent_task_id);
+            """;
+        await parentIndexCommand.ExecuteNonQueryAsync();
 
         await using var metaCommand = connection.CreateCommand();
         metaCommand.CommandText = """
@@ -278,7 +306,7 @@ public sealed class TaskRepository
             ON CONFLICT(key) DO UPDATE SET value = excluded.value;
             """;
         metaCommand.Parameters.AddWithValue("$key", "schema_version");
-        metaCommand.Parameters.AddWithValue("$value", "2");
+        metaCommand.Parameters.AddWithValue("$value", "3");
         await metaCommand.ExecuteNonQueryAsync();
 
         await using var touchedCommand = connection.CreateCommand();

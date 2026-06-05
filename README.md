@@ -2,10 +2,11 @@
 
 WorkSync is a Windows desktop app built with C#, WPF, and .NET 8.
 
-It currently has 3 main tabs:
+It currently has 4 main tabs:
 - `Catalog`: searchable launcher list for apps/folders.
 - `Tasks`: task tracker with SQLite-backed create/edit/complete flow.
 - `Note`: local note workspace with search, favorites, tags, live editing, and preview.
+- `History Management`: SQLite-backed history-file management with curved route/map event visualization.
 
 ## Requirements
 
@@ -135,6 +136,38 @@ Current note capabilities:
 - Simple read preview with checklist (`- [ ]`, `- [x]`) and heading support
 - Split note workspace with list, editor, and preview/details panels
 
+## History Management Feature
+
+History data is persisted in `history.db` and shown in the `History Management` tab.
+
+A `HistoryFile` is a database record used for organizing history events. It is not a real physical file on disk.
+
+Current history-file capabilities:
+- Create, rename/edit, delete, favorite/unfavorite, and search history files
+- Search history files by name or tag
+- Favorite history files are sorted to the top
+- Right-click a history file to open its context menu actions
+
+Current history-event capabilities:
+- Create, edit, and delete events inside the currently opened history file
+- Store event date, free-text note, created timestamp, and updated timestamp
+- Allow multiple events on the same date
+- Search events only inside the currently opened history file
+- Selecting an event search result navigates to its month/year and highlights that event once
+
+Visualization behavior:
+- The opened history file is displayed as a scrollable curved route/path timeline instead of a table or standard list
+- Event points are drawn along one continuous route and show event date plus note text
+- Month/year selectors control the viewed event range
+- The month selector includes `All`, which shows all events in the selected year
+- Empty days are hidden; if the selected view has no events, an empty state is shown
+- Route controls are overlaid on top of the visualization
+- A loading overlay is shown while the route visualization refreshes for larger event sets
+
+Export behavior:
+- Export the selected month/current year view to `.xlsx`
+- Export all events in the current history file to `.xlsx`
+
 ## Storage
 
 For backward compatibility, local app data still uses the legacy `LauncherCatalog` folder name.
@@ -181,6 +214,16 @@ Current `tasks` schema is intentionally extendable (includes `status`, `priority
 
 Current `notes` schema stores `title`, `body`, `tags_json`, `is_favorite`, `created_at`, `updated_at`, and `last_viewed_at`.
 
+### History DB
+
+```text
+%LOCALAPPDATA%\LauncherCatalog\history.db
+```
+
+Current history schema stores:
+- `history_files`: `name`, `tags_json`, `is_favorite`, `created_at`, and `updated_at`
+- `history_events`: owning `history_file_id`, `event_date`, `note`, `created_at`, and `updated_at`
+
 ### Automatic Backups
 
 The app also keeps automatic SQLite backups in:
@@ -192,7 +235,7 @@ The app also keeps automatic SQLite backups in:
 Behavior:
 - backup checks run automatically at app startup and continue while the app is running in the tray
 - when the last successful backup is older than 2 days, the app creates one timestamped backup version folder under `Backups\Versions`
-- each version folder contains the database files together using their original names such as `catalog.db`, `task.db`, and `note.db`
+- each version folder contains the database files together using their original names such as `catalog.db`, `task.db`, `note.db`, and `history.db`
 - only the newest 10 backup versions are kept; older version folders are deleted automatically
 - restore instructions are written to `%LOCALAPPDATA%\LauncherCatalog\Backups\RESTORE.txt` so the live database path is easy to find later
 
@@ -256,10 +299,11 @@ src/LauncherCatalog/
 ## Handoff Notes For New Chats
 
 When starting a new chat, read this file first, then assume:
-- `Catalog`, `Tasks`, and `Note` are all active tabs in the UI.
+- `Catalog`, `Tasks`, `Note`, and `History Management` are all active tabs in the UI.
 - Catalog data uses `catalog.db`.
 - Task data uses `task.db`.
 - Note data uses `note.db`.
+- History data uses `history.db`.
 - The app uses custom title bar/window chrome.
 
 ## Maintenance Rule

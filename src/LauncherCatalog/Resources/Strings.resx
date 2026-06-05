@@ -49,6 +49,7 @@
   <data name="Common.SearchEllipsis" xml:space="preserve"><value>Search...</value></data>
   <data name="Main.Tab.Catalog" xml:space="preserve"><value>Catalog</value></data>
   <data name="Main.Tab.Tasks" xml:space="preserve"><value>Tasks</value></data>
+  <data name="Main.Tab.HistoryManagement" xml:space="preserve"><value>History Management</value></data>
   <data name="Main.Tab.Note" xml:space="preserve"><value>Note</value></data>
   <data name="Main.Action.AddApp" xml:space="preserve"><value>Add App</value></data>
   <data name="Main.Action.AddFolder" xml:space="preserve"><value>Add Folder</value></data>
@@ -120,6 +121,66 @@
   <data name="Main.Note.PreviewEmptyTitle" xml:space="preserve"><value>Preview will appear here</value></data>
   <data name="Main.Note.PreviewEmptyMessage" xml:space="preserve"><value>Once a note is selected, this panel shows a simple read view plus note details.</value></data>
   <data name="Main.Loading" xml:space="preserve"><value>Loading data</value></data>
+  <data name="History.Title" xml:space="preserve"><value>History Management</value></data>
+  <data name="History.File.Count" xml:space="preserve"><value>{0} history file(s)</value></data>
+  <data name="History.File.CreateTitle" xml:space="preserve"><value>Create History File</value></data>
+  <data name="History.File.DetailsTitle" xml:space="preserve"><value>History File Details</value></data>
+  <data name="History.File.EmptyTitle" xml:space="preserve"><value>No History Files yet</value></data>
+  <data name="History.File.EmptyMessage" xml:space="preserve"><value>Create a History File to begin tracking events.</value></data>
+  <data name="History.Action.CreateFile" xml:space="preserve"><value>Create History File</value></data>
+  <data name="History.Action.NewEvent" xml:space="preserve"><value>New Event</value></data>
+  <data name="History.Action.Export" xml:space="preserve"><value>Export</value></data>
+  <data name="History.Action.ExportMonth" xml:space="preserve"><value>Export Current View</value></data>
+  <data name="History.Action.ExportAll" xml:space="preserve"><value>Export All</value></data>
+  <data name="History.Tooltip.FileName" xml:space="preserve"><value>History File name</value></data>
+  <data name="History.Tooltip.FileTags" xml:space="preserve"><value>Comma-separated tags</value></data>
+  <data name="History.Tooltip.SearchFiles" xml:space="preserve"><value>Search History Files by name or tag</value></data>
+  <data name="History.Tooltip.SearchEvents" xml:space="preserve"><value>Search events inside the opened History File</value></data>
+  <data name="History.Tooltip.EventNote" xml:space="preserve"><value>Event note</value></data>
+  <data name="History.Empty.SelectFileTitle" xml:space="preserve"><value>Select a History File</value></data>
+  <data name="History.Empty.SelectFileMessage" xml:space="preserve"><value>Choose or create a History File to view its route-style history map.</value></data>
+  <data name="History.Month.All" xml:space="preserve"><value>All</value></data>
+  <data name="History.Event.Count" xml:space="preserve"><value>{0} event(s) in selected view</value></data>
+  <data name="History.Event.NewTitle" xml:space="preserve"><value>New Event</value></data>
+  <data name="History.Event.EditTitle" xml:space="preserve"><value>Edit Event</value></data>
+  <data name="History.Event.EmptyMonthTitle" xml:space="preserve"><value>No events in this view</value></data>
+  <data name="History.Event.EmptyMonthMessage" xml:space="preserve"><value>Only dates with events appear on the route map.</value></data>
+  <data name="History.Visualization.LoadingTitle" xml:space="preserve"><value>Drawing history map</value></data>
+  <data name="History.Visualization.LoadingMessage" xml:space="preserve"><value>Please wait while the route is prepared.</value></data>
+  <data name="History.Search.ResultsTitle" xml:space="preserve"><value>Event Search Results</value></data>
+  <data name="History.Message.LoadFailed" xml:space="preserve"><value>History data could not be loaded.</value></data>
+  <data name="History.Message.FileNameRequired" xml:space="preserve"><value>Please enter a History File name.</value></data>
+  <data name="History.Message.FileCreated" xml:space="preserve"><value>History File created.</value></data>
+  <data name="History.Message.FileSaved" xml:space="preserve"><value>History File saved.</value></data>
+  <data name="History.Message.FileDeleted" xml:space="preserve"><value>History File deleted.</value></data>
+  <data name="History.Message.FileDeleteTitle" xml:space="preserve"><value>Delete History File</value></data>
+  <data name="History.Message.FileDeleteConfirm" xml:space="preserve"><value>Delete "{0}" and all of its events?</value></data>
+  <data name="History.Message.FileFavoriteAdded" xml:space="preserve"><value>History File added to favorites.</value></data>
+  <data name="History.Message.FileFavoriteRemoved" xml:space="preserve"><value>History File removed from favorites.</value></data>
+  <data name="History.Dialog.CreateTitle" xml:space="preserve"><value>Create History File</value></data>
+  <data name="History.Dialog.CreateSubtitle" xml:space="preserve"><value>Name this managed history record and add optional tags.</value></data>
+  <data name="History.Dialog.EditTitle" xml:space="preserve"><value>Edit History File</value></data>
+  <data name="History.Dialog.EditSubtitle" xml:space="preserve"><value>Update the name and tags for this managed history record.</value></data>
+  <data name="History.Field.FileName" xml:space="preserve"><value>History File Name</value></data>
+  <data name="History.Field.EventDate" xml:space="preserve"><value>Event Date</value></data>
+  <data name="History.Placeholder.FileName" xml:space="preserve"><value>Enter history file name</value></data>
+  <data name="History.Placeholder.FileTags" xml:space="preserve"><value>Tags, for example project, release, audit</value></data>
+  <data name="History.Placeholder.SearchFiles" xml:space="preserve"><value>Search history files by name or tag</value></data>
+  <data name="History.Placeholder.SearchEvents" xml:space="preserve"><value>Search events in this history file</value></data>
+  <data name="History.Placeholder.EventNote" xml:space="preserve"><value>Write the event note here</value></data>
+  <data name="History.Message.FileOpened" xml:space="preserve"><value>Opened "{0}".</value></data>
+  <data name="History.Message.EventsLoadFailed" xml:space="preserve"><value>History events could not be loaded.</value></data>
+  <data name="History.Event.DialogSubtitle" xml:space="preserve"><value>Choose the event date and write the note.</value></data>
+  <data name="History.Message.EventDateRequired" xml:space="preserve"><value>Please choose an event date.</value></data>
+  <data name="History.Message.EventNoteRequired" xml:space="preserve"><value>Please enter an event note.</value></data>
+  <data name="History.Message.EventCreated" xml:space="preserve"><value>History event created.</value></data>
+  <data name="History.Message.EventSaved" xml:space="preserve"><value>History event saved.</value></data>
+  <data name="History.Message.EventDeleted" xml:space="preserve"><value>History event deleted.</value></data>
+  <data name="History.Message.EventDeleteTitle" xml:space="preserve"><value>Delete event</value></data>
+  <data name="History.Message.EventDeleteConfirm" xml:space="preserve"><value>Delete this history event?</value></data>
+  <data name="History.Message.NoEventsToExport" xml:space="preserve"><value>No events are available to export.</value></data>
+  <data name="History.Message.ExportComplete" xml:space="preserve"><value>History exported to Excel.</value></data>
+  <data name="History.Message.ExportFailed" xml:space="preserve"><value>Could not export history. {0}</value></data>
   <data name="CatalogFilter.All" xml:space="preserve"><value>All</value></data>
   <data name="CatalogFilter.Apps" xml:space="preserve"><value>Apps</value></data>
   <data name="CatalogFilter.Folders" xml:space="preserve"><value>Folders</value></data>

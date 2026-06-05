@@ -5,6 +5,7 @@
         xmlns:loc="clr-namespace:LauncherCatalog.Services"
         xmlns:models="clr-namespace:LauncherCatalog.Models"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:views="clr-namespace:LauncherCatalog.Views"
         Title="{loc:Loc Common.AppName}"
         Width="1180"
         Height="760"
@@ -31,6 +32,7 @@
         <conv:NullToVisibilityConverter x:Key="NotNullToVisibilityConverter" Invert="True" />
         <conv:StringNullOrEmptyToVisibilityConverter x:Key="SearchPlaceholderConverter" />
         <conv:BooleanToOpacityConverter x:Key="FavoriteOpacityConverter" TrueOpacity="1" FalseOpacity="0.45" />
+        <conv:TaskDepthToIndentConverter x:Key="TaskDepthToIndentConverter" IndentSize="24" />
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <Style x:Key="CardActionButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource IconButtonStyle}">
@@ -401,6 +403,62 @@
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="Padding" Value="10,5" />
             <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+
+        <Style x:Key="TaskTreeIconButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource IconButtonStyle}">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+
+        <Style x:Key="TaskInlineTitleEditorStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="MinWidth" Value="180" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Background" Value="{DynamicResource ControlBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="TaskChevronGlyphStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <RotateTransform Angle="0" />
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                 To="90"
+                                                 Duration="0:0:0.18" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                 To="0"
+                                                 Duration="0:0:0.18" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SubtaskConnectorLineStyle" TargetType="{x:Type Line}">
+            <Setter Property="Stroke" Value="#FFB7BCC5" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeDashArray" Value="1.2,1.4" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
         </Style>
 
     </Window.Resources>
@@ -1140,10 +1198,10 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="6" />
                                     <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="3.25*" />
-                                    <ColumnDefinition Width="1.35*" />
-                                    <ColumnDefinition Width="1.25*" />
-                                    <ColumnDefinition Width="2.15*" />
+                                    <ColumnDefinition Width="*" MinWidth="280" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="140" />
+                                    <ColumnDefinition Width="320" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="2"
                                            Text="{loc:Loc Task.Field.Title}"
@@ -1163,139 +1221,359 @@
                                            FontWeight="SemiBold" />
                             </Grid>
 
-                            <ScrollViewer Grid.Row="1"
+                            <ScrollViewer x:Name="TaskListScrollViewer"
+                                          Grid.Row="1"
                                           Margin="10,0,10,10"
                                           VerticalScrollBarVisibility="Auto"
-                                          HorizontalScrollBarVisibility="Disabled">
-                                <ItemsControl ItemsSource="{Binding Tasks}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Tag="TaskRowRoot"
-                                                    Margin="0,0,0,8"
-                                                    Padding="10"
-                                                    Background="{DynamicResource SurfaceBrush}"
-                                                    BorderBrush="{DynamicResource BorderBrush}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="8">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="6" />
-                                                        <ColumnDefinition Width="10" />
-                                                        <ColumnDefinition Width="3.25*" />
-                                                        <ColumnDefinition Width="1.35*" />
-                                                        <ColumnDefinition Width="1.25*" />
-                                                        <ColumnDefinition Width="2.15*" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Style="{StaticResource TaskPriorityStripeStyle}"
-                                                            CornerRadius="3" />
-                                                    <TextBlock Grid.Column="2"
-                                                               Text="{Binding Title}"
-                                                               FontWeight="SemiBold"
-                                                               VerticalAlignment="Center" />
+                                          HorizontalScrollBarVisibility="Auto"
+                                          CanContentScroll="False">
+                                <Grid MinWidth="780"
+                                      Width="{Binding ViewportWidth, ElementName=TaskListScrollViewer}"
+                                      HorizontalAlignment="Left">
+                                    <ItemsControl ItemsSource="{Binding Tasks}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Border Tag="TaskRowRoot"
+                                                            Loaded="TaskRow_Loaded"
+                                                            Visibility="{Binding ShowDetailedTaskLayout, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            Padding="10"
+                                                            Background="{DynamicResource SurfaceBrush}"
+                                                            BorderBrush="{DynamicResource BorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="6" />
+                                                                <ColumnDefinition Width="10" />
+                                                                <ColumnDefinition Width="*" MinWidth="280" />
+                                                                <ColumnDefinition Width="150" />
+                                                                <ColumnDefinition Width="140" />
+                                                                <ColumnDefinition Width="320" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Style="{StaticResource TaskPriorityStripeStyle}"
+                                                                    CornerRadius="3" />
+                                                            <StackPanel Grid.Column="2"
+                                                                        Orientation="Horizontal"
+                                                                        VerticalAlignment="Center">
+                                                                <Button Style="{StaticResource TaskTreeIconButtonStyle}"
+                                                                        Width="22"
+                                                                        Height="22"
+                                                                        Padding="0"
+                                                                        Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                        Command="{Binding DataContext.ToggleTaskExpansionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}">
+                                                                    <TextBlock Text="&#xE76C;"
+                                                                               FontFamily="Segoe MDL2 Assets"
+                                                                               FontSize="12"
+                                                                               Style="{StaticResource TaskChevronGlyphStyle}"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center" />
+                                                                </Button>
+                                                                <Border Width="22"
+                                                                        Height="22"
+                                                                        Margin="0,0,6,0">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="{x:Type Border}">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasChildren}" Value="False">
+                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                </Border>
+                                                                <Button Style="{StaticResource TaskTreeIconButtonStyle}"
+                                                                        Content="&#xE710;"
+                                                                        ToolTip="{loc:Loc Main.Action.CreateTask}"
+                                                                        Command="{Binding DataContext.AddSubtaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" />
+                                                                <Grid VerticalAlignment="Center"
+                                                                      MinWidth="180">
+                                                                    <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"
+                                                                             Style="{StaticResource TaskInlineTitleEditorStyle}"
+                                                                             Visibility="{Binding ShowInlineEditor, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                             Loaded="TaskTitleEditor_Loaded"
+                                                                             KeyDown="TaskTitleEditor_KeyDown"
+                                                                             LostFocus="TaskTitleEditor_LostFocus" />
+                                                                    <TextBlock Text="{Binding TitleOrPlaceholder}"
+                                                                               FontWeight="SemiBold"
+                                                                               Foreground="{DynamicResource StrongTextBrush}"
+                                                                               VerticalAlignment="Center"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               Visibility="{Binding ShowReadOnlyTitle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                                </Grid>
+                                                            </StackPanel>
 
-                                                    <Grid Grid.Column="3"
-                                                          VerticalAlignment="Center">
-                                                        <ToggleButton x:Name="DueDateToggle"
-                                                                      Style="{StaticResource TaskInlineDateFieldStyle}">
-                                                            <TextBlock Text="{Binding DueDateText}"
-                                                                       Foreground="{DynamicResource MutedTextBrush}"
-                                                                       VerticalAlignment="Center"
-                                                                       TextWrapping="NoWrap" />
-                                                        </ToggleButton>
-                                                        <Popup IsOpen="{Binding IsChecked, ElementName=DueDateToggle, Mode=TwoWay}"
-                                                               PlacementTarget="{Binding ElementName=DueDateToggle}"
-                                                               Placement="Bottom"
-                                                               StaysOpen="False"
-                                                               AllowsTransparency="True"
-                                                               PopupAnimation="Fade">
-                                                            <Border Background="{DynamicResource SurfaceBrush}"
-                                                                    BorderBrush="{DynamicResource BorderBrush}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="16"
-                                                                    Padding="8">
-                                                                <Calendar Style="{StaticResource MaterialDesignCalendarPortrait}"
-                                                                          SelectedDate="{Binding DueDate, Mode=OneWay}"
-                                                                          SelectedDatesChanged="TaskDueDateCalendar_SelectedDatesChanged" />
-                                                            </Border>
-                                                        </Popup>
-                                                    </Grid>
+                                                            <Grid Grid.Column="3"
+                                                                  VerticalAlignment="Center"
+                                                                  Visibility="{Binding ShowDueDate, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                                <ToggleButton x:Name="DueDateToggle"
+                                                                              Style="{StaticResource TaskInlineDateFieldStyle}">
+                                                                    <TextBlock Text="{Binding DueDateText}"
+                                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                                               VerticalAlignment="Center"
+                                                                               TextWrapping="NoWrap" />
+                                                                </ToggleButton>
+                                                                <Popup IsOpen="{Binding IsChecked, ElementName=DueDateToggle, Mode=TwoWay}"
+                                                                       PlacementTarget="{Binding ElementName=DueDateToggle}"
+                                                                       Placement="Bottom"
+                                                                       StaysOpen="False"
+                                                                       AllowsTransparency="True"
+                                                                       PopupAnimation="Fade">
+                                                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                                                            BorderBrush="{DynamicResource BorderBrush}"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="16"
+                                                                            Padding="8">
+                                                                        <Calendar Style="{StaticResource MaterialDesignCalendarPortrait}"
+                                                                                  SelectedDate="{Binding DueDate, Mode=OneWay}"
+                                                                                  SelectedDatesChanged="TaskDueDateCalendar_SelectedDatesChanged" />
+                                                                    </Border>
+                                                                </Popup>
+                                                            </Grid>
 
-                                                    <Grid Grid.Column="4"
-                                                          VerticalAlignment="Center">
-                                                        <ToggleButton x:Name="StatusToggle"
-                                                                      Style="{StaticResource TaskInlineTextToggleStyle}">
-                                                            <Border Style="{StaticResource TaskStatusBadgeBorderStyle}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="6"
-                                                                    Padding="10,4"
-                                                                    HorizontalAlignment="Left"
-                                                                    VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding StatusText}"
-                                                                           Style="{StaticResource TaskStatusBadgeTextStyle}"
-                                                                           FontWeight="SemiBold"
-                                                                           FontSize="12" />
-                                                            </Border>
-                                                        </ToggleButton>
-                                                        <Popup IsOpen="{Binding IsChecked, ElementName=StatusToggle, Mode=TwoWay}"
-                                                               PlacementTarget="{Binding ElementName=StatusToggle}"
-                                                               Placement="Bottom"
-                                                               StaysOpen="False"
-                                                               AllowsTransparency="True"
-                                                               PopupAnimation="Fade">
-                                                            <Border Background="{DynamicResource SurfaceBrush}"
-                                                                    BorderBrush="{DynamicResource BorderBrush}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="10"
-                                                                    Padding="8">
-                                                                <StackPanel>
-                                                                    <Button Content="{loc:Loc Task.Status.Todo}"
-                                                                            Tag="Todo"
-                                                                            Click="TaskStatusOption_Click"
-                                                                            Style="{StaticResource SecondaryButtonStyle}"
-                                                                            Margin="0,0,0,6" />
-                                                                    <Button Content="{loc:Loc Task.Status.Ongoing}"
-                                                                            Tag="Ongoing"
-                                                                            Click="TaskStatusOption_Click"
-                                                                            Style="{StaticResource SecondaryButtonStyle}"
-                                                                            Margin="0,0,0,6" />
-                                                                    <Button Content="{loc:Loc Task.Status.Done}"
-                                                                            Tag="Done"
-                                                                            Click="TaskStatusOption_Click"
-                                                                            Style="{StaticResource SecondaryButtonStyle}" />
+                                                            <Grid Grid.Column="4"
+                                                                  VerticalAlignment="Center">
+                                                                <ToggleButton x:Name="StatusToggle"
+                                                                              Style="{StaticResource TaskInlineTextToggleStyle}"
+                                                                              IsEnabled="{Binding ShowStatusPicker}">
+                                                                    <Border Style="{StaticResource TaskStatusBadgeBorderStyle}"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="6"
+                                                                            Padding="10,4"
+                                                                            HorizontalAlignment="Left"
+                                                                            VerticalAlignment="Center">
+                                                                        <TextBlock Text="{Binding StatusText}"
+                                                                                   Style="{StaticResource TaskStatusBadgeTextStyle}"
+                                                                                   FontWeight="SemiBold"
+                                                                                   FontSize="12" />
+                                                                    </Border>
+                                                                </ToggleButton>
+                                                                <Popup IsOpen="{Binding IsChecked, ElementName=StatusToggle, Mode=TwoWay}"
+                                                                       PlacementTarget="{Binding ElementName=StatusToggle}"
+                                                                       Placement="Bottom"
+                                                                       StaysOpen="False"
+                                                                       AllowsTransparency="True"
+                                                                       PopupAnimation="Fade">
+                                                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                                                            BorderBrush="{DynamicResource BorderBrush}"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="10"
+                                                                            Padding="8">
+                                                                        <StackPanel>
+                                                                            <Button Content="{loc:Loc Task.Status.Todo}"
+                                                                                    Tag="Todo"
+                                                                                    Click="TaskStatusOption_Click"
+                                                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                                                    Margin="0,0,0,6" />
+                                                                            <Button Content="{loc:Loc Task.Status.Ongoing}"
+                                                                                    Tag="Ongoing"
+                                                                                    Click="TaskStatusOption_Click"
+                                                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                                                    Margin="0,0,0,6" />
+                                                                            <Button Content="{loc:Loc Task.Status.Done}"
+                                                                                    Tag="Done"
+                                                                                    Click="TaskStatusOption_Click"
+                                                                                    Style="{StaticResource SecondaryButtonStyle}" />
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </Popup>
+                                                            </Grid>
+
+                                                            <StackPanel Grid.Column="5"
+                                                                        Orientation="Horizontal"
+                                                                        HorizontalAlignment="Left"
+                                                                        VerticalAlignment="Center">
+                                                                <Button Style="{StaticResource CompactTaskActionButtonStyle}"
+                                                                        Content="{loc:Loc Task.Dialog.MarkCompleted}"
+                                                                        Visibility="{Binding ShowMarkCompletedButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                        HorizontalAlignment="Left"
+                                                                        VerticalAlignment="Center"
+                                                                        Command="{Binding DataContext.MarkTaskCompletedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" />
+                                                                <Button Margin="8,0,0,0"
+                                                                        Style="{StaticResource IconButtonStyle}"
+                                                                        Content="&#xE70F;"
+                                                                        VerticalAlignment="Center"
+                                                                        ToolTip="{loc:Loc Common.Edit}"
+                                                                        Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" />
+                                                                <Button Margin="8,0,0,0"
+                                                                        Style="{StaticResource IconButtonStyle}"
+                                                                        Content="{Binding NotificationIcon}"
+                                                                        VerticalAlignment="Center"
+                                                                        ToolTip="{Binding NotificationToolTip}"
+                                                                        Opacity="{Binding NotificationsEnabled, Converter={StaticResource FavoriteOpacityConverter}, ConverterParameter=1}"
+                                                                        Command="{Binding DataContext.ToggleTaskNotificationsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                        CommandParameter="{Binding}" />
+                                                                <Button Margin="8,0,0,0"
+                                                                        Style="{StaticResource IconButtonStyle}"
+                                                                        Content="&#xE74D;"
+                                                                        VerticalAlignment="Center"
+                                                                        ToolTip="{loc:Loc Common.Delete}"
+                                                                        Click="RemoveTask_Click" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+
+                                                    <Grid Visibility="{Binding ShowCompactTaskLayout, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                          Margin="{Binding Depth, Converter={StaticResource TaskDepthToIndentConverter}}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="22" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Grid Grid.Column="0"
+                                                              Width="22"
+                                                              MinHeight="34"
+                                                              VerticalAlignment="Stretch">
+                                                            <Line X1="8"
+                                                                  Y1="0"
+                                                                  X2="8"
+                                                                  Y2="34"
+                                                                  Style="{StaticResource SubtaskConnectorLineStyle}" />
+                                                            <Line X1="8"
+                                                                  Y1="17"
+                                                                  X2="22"
+                                                                  Y2="17"
+                                                                  Style="{StaticResource SubtaskConnectorLineStyle}" />
+                                                        </Grid>
+
+                                                        <Border Grid.Column="1"
+                                                                Tag="TaskRowRoot"
+                                                                Loaded="TaskRow_Loaded"
+                                                                Padding="10,8"
+                                                                Background="{DynamicResource ControlBrush}"
+                                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="8">
+                                                            <DockPanel LastChildFill="True">
+                                                                <StackPanel DockPanel.Dock="Right"
+                                                                            Orientation="Horizontal"
+                                                                            VerticalAlignment="Center">
+                                                                    <Grid Margin="10,0,0,0"
+                                                                          VerticalAlignment="Center">
+                                                                        <ToggleButton x:Name="CompactStatusToggle"
+                                                                                      Style="{StaticResource TaskInlineTextToggleStyle}"
+                                                                                      IsEnabled="{Binding ShowStatusPicker}">
+                                                                            <Border Style="{StaticResource TaskStatusBadgeBorderStyle}"
+                                                                                    BorderThickness="1"
+                                                                                    CornerRadius="6"
+                                                                                    Padding="10,4"
+                                                                                    HorizontalAlignment="Left"
+                                                                                    VerticalAlignment="Center">
+                                                                                <TextBlock Text="{Binding StatusText}"
+                                                                                           Style="{StaticResource TaskStatusBadgeTextStyle}"
+                                                                                           FontWeight="SemiBold"
+                                                                                           FontSize="12" />
+                                                                            </Border>
+                                                                        </ToggleButton>
+                                                                        <Popup IsOpen="{Binding IsChecked, ElementName=CompactStatusToggle, Mode=TwoWay}"
+                                                                               PlacementTarget="{Binding ElementName=CompactStatusToggle}"
+                                                                               Placement="Bottom"
+                                                                               StaysOpen="False"
+                                                                               AllowsTransparency="True"
+                                                                               PopupAnimation="Fade">
+                                                                            <Border Background="{DynamicResource SurfaceBrush}"
+                                                                                    BorderBrush="{DynamicResource BorderBrush}"
+                                                                                    BorderThickness="1"
+                                                                                    CornerRadius="10"
+                                                                                    Padding="8">
+                                                                                <StackPanel>
+                                                                                    <Button Content="{loc:Loc Task.Status.Todo}"
+                                                                                            Tag="Todo"
+                                                                                            Click="TaskStatusOption_Click"
+                                                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                                                            Margin="0,0,0,6" />
+                                                                                    <Button Content="{loc:Loc Task.Status.Ongoing}"
+                                                                                            Tag="Ongoing"
+                                                                                            Click="TaskStatusOption_Click"
+                                                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                                                            Margin="0,0,0,6" />
+                                                                                    <Button Content="{loc:Loc Task.Status.Done}"
+                                                                                            Tag="Done"
+                                                                                            Click="TaskStatusOption_Click"
+                                                                                            Style="{StaticResource SecondaryButtonStyle}" />
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </Popup>
+                                                                    </Grid>
+                                                                    <Button Margin="8,0,0,0"
+                                                                            Style="{StaticResource IconButtonStyle}"
+                                                                            Content="&#xE70F;"
+                                                                            VerticalAlignment="Center"
+                                                                            ToolTip="{loc:Loc Common.Edit}"
+                                                                            Command="{Binding DataContext.BeginInlineRenameTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" />
+                                                                    <Button Margin="8,0,0,0"
+                                                                            Style="{StaticResource IconButtonStyle}"
+                                                                            Content="&#xE74D;"
+                                                                            VerticalAlignment="Center"
+                                                                            ToolTip="{loc:Loc Common.Delete}"
+                                                                            Click="RemoveTask_Click" />
                                                                 </StackPanel>
-                                                            </Border>
-                                                        </Popup>
-                                                    </Grid>
 
-                                                    <StackPanel Grid.Column="5"
-                                                                Orientation="Horizontal"
-                                                                VerticalAlignment="Center">
-                                                        <Button Style="{StaticResource CompactTaskActionButtonStyle}"
-                                                                Content="{loc:Loc Task.Dialog.MarkCompleted}"
-                                                                HorizontalAlignment="Left"
-                                                                VerticalAlignment="Center"
-                                                                Click="RemoveTask_Click" />
-                                                        <Button Margin="8,0,0,0"
-                                                                Style="{StaticResource IconButtonStyle}"
-                                                                Content="&#xE70F;"
-                                                                VerticalAlignment="Center"
-                                                                ToolTip="{loc:Loc Common.Edit}"
-                                                                Command="{Binding DataContext.EditTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                CommandParameter="{Binding}" />
-                                                        <Button Margin="8,0,0,0"
-                                                                Style="{StaticResource IconButtonStyle}"
-                                                                Content="{Binding NotificationIcon}"
-                                                                VerticalAlignment="Center"
-                                                                ToolTip="{Binding NotificationToolTip}"
-                                                                Opacity="{Binding NotificationsEnabled, Converter={StaticResource FavoriteOpacityConverter}, ConverterParameter=1}"
-                                                                Command="{Binding DataContext.ToggleTaskNotificationsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                CommandParameter="{Binding}" />
-                                                    </StackPanel>
+                                                                <StackPanel Orientation="Horizontal"
+                                                                            VerticalAlignment="Center">
+                                                                    <Button Style="{StaticResource TaskTreeIconButtonStyle}"
+                                                                            Width="22"
+                                                                            Height="22"
+                                                                            Padding="0"
+                                                                            Visibility="{Binding HasChildren, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                            Command="{Binding DataContext.ToggleTaskExpansionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}">
+                                                                        <TextBlock Text="&#xE76C;"
+                                                                                   FontFamily="Segoe MDL2 Assets"
+                                                                                   FontSize="12"
+                                                                                   Style="{StaticResource TaskChevronGlyphStyle}"
+                                                                                   HorizontalAlignment="Center"
+                                                                                   VerticalAlignment="Center" />
+                                                                    </Button>
+                                                                    <Border Width="22"
+                                                                            Height="22"
+                                                                            Margin="0,0,6,0">
+                                                                        <Border.Style>
+                                                                            <Style TargetType="{x:Type Border}">
+                                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding HasChildren}" Value="False">
+                                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Border.Style>
+                                                                    </Border>
+                                                                    <Button Style="{StaticResource TaskTreeIconButtonStyle}"
+                                                                            Content="&#xE710;"
+                                                                            ToolTip="{loc:Loc Main.Action.CreateTask}"
+                                                                            Command="{Binding DataContext.AddSubtaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}" />
+                                                                    <Grid VerticalAlignment="Center"
+                                                                          MinWidth="180">
+                                                                        <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"
+                                                                                 Style="{StaticResource TaskInlineTitleEditorStyle}"
+                                                                                 Visibility="{Binding ShowInlineEditor, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                                                 Loaded="TaskTitleEditor_Loaded"
+                                                                                 KeyDown="TaskTitleEditor_KeyDown"
+                                                                                 LostFocus="TaskTitleEditor_LostFocus" />
+                                                                        <TextBlock Text="{Binding TitleOrPlaceholder}"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{DynamicResource StrongTextBrush}"
+                                                                                   VerticalAlignment="Center"
+                                                                                   TextTrimming="CharacterEllipsis"
+                                                                                   Visibility="{Binding ShowReadOnlyTitle, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                                    </Grid>
+                                                                </StackPanel>
+                                                            </DockPanel>
+                                                        </Border>
+                                                    </Grid>
                                                 </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
                             </ScrollViewer>
                         </Grid>
                     </Border>
@@ -1567,6 +1845,10 @@
                     </Border>
 
                 </Grid>
+            </TabItem>
+            <TabItem Header="{loc:Loc Main.Tab.HistoryManagement}"
+                     MinWidth="178">
+                <views:HistoryManagementView Margin="0,14,0,0" />
             </TabItem>
         </TabControl>
         </Grid>
