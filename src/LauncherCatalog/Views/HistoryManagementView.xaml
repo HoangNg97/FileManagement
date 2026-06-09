@@ -299,6 +299,7 @@
                                                  CaretBrush="{DynamicResource StrongTextBrush}"
                                                  Padding="14,7"
                                                  VerticalContentAlignment="Center"
+                                                 KeyDown="EventSearchTextBox_KeyDown"
                                                  ToolTip="{loc:Loc History.Tooltip.SearchEvents}" />
                                         <TextBlock Margin="14,0,14,0"
                                                    Text="{loc:Loc History.Placeholder.SearchEvents}"

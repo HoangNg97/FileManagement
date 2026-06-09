@@ -154,6 +154,7 @@ Current history-event capabilities:
 - Allow multiple events on the same date
 - Search events only inside the currently opened history file
 - Selecting an event search result navigates to its month/year and highlights that event once
+- Pressing Enter in the event search field temporarily redraws the route map to show matching events only
 
 Visualization behavior:
 - The opened history file is displayed as a scrollable curved route/path timeline instead of a table or standard list

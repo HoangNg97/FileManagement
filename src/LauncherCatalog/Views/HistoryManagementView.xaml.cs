@@ -134,6 +134,18 @@ public partial class HistoryManagementView : System.Windows.Controls.UserControl
         _viewModel.ShowEventSearch = false;
     }
 
+    private void EventSearchTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Enter)
+        {
+            return;
+        }
+
+        _viewModel.ApplyEventVisualizationSearch();
+        _viewModel.DismissEventSearchResults();
+        e.Handled = true;
+    }
+
     private void Root_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (!_viewModel.HasEventSearchResults

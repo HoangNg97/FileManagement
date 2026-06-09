@@ -29,6 +29,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
     private string _selectedFileName = string.Empty;
     private string _selectedFileTagsText = string.Empty;
     private string _eventSearchText = string.Empty;
+    private string _eventVisualizationSearchText = string.Empty;
     private string _eventNote = string.Empty;
     private string _statusMessage = string.Empty;
     private DateTime? _eventDate = DateTime.Today;
@@ -187,6 +188,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
         {
             if (SetProperty(ref _selectedYear, value))
             {
+                ClearEventVisualizationSearch(refreshVisibleEvents: false);
                 var previousMonthOption = SelectedMonthOption;
                 RefreshMonthOptions(SelectedMonthOption?.Month);
                 if (Equals(previousMonthOption, SelectedMonthOption))
@@ -204,6 +206,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
         {
             if (SetProperty(ref _selectedMonthOption, value))
             {
+                ClearEventVisualizationSearch(refreshVisibleEvents: false);
                 RefreshVisibleEvents();
             }
         }
@@ -216,6 +219,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
         {
             if (SetProperty(ref _eventSearchText, value))
             {
+                ClearEventVisualizationSearchIfKeywordChanged();
                 RefreshEventSearchResults();
             }
         }
@@ -231,6 +235,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
                 EventSearchText = string.Empty;
                 EventSearchResults.Clear();
                 _isEventSearchResultsOpen = false;
+                ClearEventVisualizationSearch(refreshVisibleEvents: true);
                 OnPropertyChanged(nameof(HasEventSearchResults));
             }
         }
@@ -294,6 +299,24 @@ public sealed class HistoryManagementViewModel : ObservableObject
 
         _isEventSearchResultsOpen = false;
         OnPropertyChanged(nameof(HasEventSearchResults));
+    }
+
+    public void ApplyEventVisualizationSearch()
+    {
+        var query = EventSearchText.Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            ClearEventVisualizationSearch(refreshVisibleEvents: true);
+            return;
+        }
+
+        if (string.Equals(_eventVisualizationSearchText, query, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _eventVisualizationSearchText = query;
+        RefreshVisibleEvents();
     }
 
     private async Task CreateFileAsync()
@@ -431,11 +454,12 @@ public sealed class HistoryManagementViewModel : ObservableObject
         HighlightedEventId = null;
         EventSearchResults.Clear();
         EventSearchText = string.Empty;
+        _eventVisualizationSearchText = string.Empty;
         _isEventSearchResultsOpen = false;
 
         if (file is null)
         {
-            VisibleEvents.Clear();
+            VisibleEvents.ReplaceWith([]);
             RaiseStatsChanged();
             return;
         }
@@ -826,9 +850,42 @@ public sealed class HistoryManagementViewModel : ObservableObject
 
     private IEnumerable<HistoryEventItem> GetEventsForCurrentView()
     {
+        if (!string.IsNullOrWhiteSpace(_eventVisualizationSearchText))
+        {
+            return _allEventsForSelectedFile.Where(item =>
+                item.Note.Contains(_eventVisualizationSearchText, StringComparison.OrdinalIgnoreCase));
+        }
+
         return _allEventsForSelectedFile.Where(item =>
             item.EventDate.Year == SelectedYear
             && (SelectedMonthOption?.IsAll == true || item.EventDate.Month == SelectedMonthOption?.Month));
+    }
+
+    private void ClearEventVisualizationSearchIfKeywordChanged()
+    {
+        if (string.IsNullOrWhiteSpace(_eventVisualizationSearchText))
+        {
+            return;
+        }
+
+        if (!string.Equals(_eventVisualizationSearchText, EventSearchText.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            ClearEventVisualizationSearch(refreshVisibleEvents: true);
+        }
+    }
+
+    private void ClearEventVisualizationSearch(bool refreshVisibleEvents)
+    {
+        if (string.IsNullOrWhiteSpace(_eventVisualizationSearchText))
+        {
+            return;
+        }
+
+        _eventVisualizationSearchText = string.Empty;
+        if (refreshVisibleEvents)
+        {
+            RefreshVisibleEvents();
+        }
     }
 
     private void FinishVisualizationLoadingAfterRender()
