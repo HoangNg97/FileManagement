@@ -288,6 +288,41 @@ public sealed class EntryRepository
         return document.RootElement.Deserialize<CatalogStore>(_jsonOptions) ?? new CatalogStore();
     }
 
+    public async Task<string?> GetSettingValueAsync(string key)
+    {
+        try
+        {
+            await using var connection = await OpenConnectionAsync();
+            await InitializeDatabaseAsync(connection);
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT value FROM settings WHERE key = $key;";
+            command.Parameters.AddWithValue("$key", key);
+            var result = await command.ExecuteScalarAsync();
+            return result as string;
+        }
+        catch (SqliteException)
+        {
+            return null;
+        }
+    }
+
+    public async Task SetSettingValueAsync(string key, string value)
+    {
+        await using var connection = await OpenConnectionAsync();
+        await InitializeDatabaseAsync(connection);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO settings (key, value)
+            VALUES ($key, $value)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+            """;
+        command.Parameters.AddWithValue("$key", key);
+        command.Parameters.AddWithValue("$value", value);
+        await command.ExecuteNonQueryAsync();
+    }
+
     private async Task<CatalogSettings> LoadSettingsAsync(SqliteConnection connection)
     {
         var settings = new CatalogSettings();

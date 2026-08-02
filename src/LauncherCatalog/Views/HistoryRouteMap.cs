@@ -502,21 +502,40 @@ public sealed class HistoryRouteMap : FrameworkElement
 
     private static IReadOnlyList<string> WrapSingleLine(string text, int maxLineLength)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrEmpty(text))
         {
             return [" "];
         }
 
+        // Preserve the leading whitespace (indentation) so the rendered line keeps the same
+        // alignment the user typed in the editor.
+        var indentLength = 0;
+        while (indentLength < text.Length && (text[indentLength] == ' ' || text[indentLength] == '\t'))
+        {
+            indentLength++;
+        }
+
+        var indent = text[..indentLength];
+        var body = text[indentLength..];
+
+        if (body.Length == 0)
+        {
+            // Whitespace-only line: keep it as-is so blank/indented spacing is preserved.
+            return [text];
+        }
+
         var lines = new List<string>();
-        var current = string.Empty;
-        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        var current = indent;
+        var hasWord = false;
+        foreach (var word in body.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
             if (word.Length > maxLineLength)
             {
-                if (!string.IsNullOrWhiteSpace(current))
+                if (hasWord || current.Length > 0)
                 {
                     lines.Add(current);
                     current = string.Empty;
+                    hasWord = false;
                 }
 
                 for (var index = 0; index < word.Length; index += maxLineLength)
@@ -527,18 +546,20 @@ public sealed class HistoryRouteMap : FrameworkElement
                 continue;
             }
 
-            var candidate = string.IsNullOrWhiteSpace(current) ? word : $"{current} {word}";
+            var candidate = hasWord ? $"{current} {word}" : current + word;
             if (candidate.Length <= maxLineLength)
             {
                 current = candidate;
+                hasWord = true;
                 continue;
             }
 
             lines.Add(current);
             current = word;
+            hasWord = true;
         }
 
-        if (!string.IsNullOrWhiteSpace(current))
+        if (hasWord || current.Length > 0)
         {
             lines.Add(current);
         }

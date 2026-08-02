@@ -1,0 +1,650 @@
+<UserControl x:Class="LauncherCatalog.Views.IssuesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:LauncherCatalog.Converters"
+             xmlns:behaviors="clr-namespace:LauncherCatalog.Behaviors"
+             xmlns:loc="clr-namespace:LauncherCatalog.Services"
+             xmlns:models="clr-namespace:LauncherCatalog.Models">
+    <UserControl.Resources>
+        <conv:ScaleConverter x:Key="HalfHeightConverter" Ratio="0.5" />
+        <conv:CountToVisibilityConverter x:Key="EmptyWhenZero" />
+        <conv:CountToVisibilityConverter x:Key="VisibleWhenAny" Invert="True" />
+        <conv:StringNullOrEmptyToVisibilityConverter x:Key="PlaceholderWhenEmpty" />
+        <conv:StringNullOrEmptyToVisibilityConverter x:Key="VisibleWhenNotEmpty" Invert="True" />
+        <conv:NullToVisibilityConverter x:Key="VisibleWhenSelected" Invert="True" />
+        <conv:NullToVisibilityConverter x:Key="VisibleWhenNoSelection" />
+
+        <!-- Read-only, borderless RichTextBox for displaying selectable text with clickable links. -->
+        <Style x:Key="LinkifiedTextStyle" TargetType="{x:Type RichTextBox}">
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="IsDocumentEnabled" Value="True" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Cursor" Value="IBeam" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="CaretBrush" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+
+        <!-- Borderless input used with a placeholder overlay (search + add message). -->
+        <Style x:Key="IssuesBorderlessTextBoxStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+                        <ScrollViewer x:Name="PART_ContentHost" Background="Transparent" Margin="0" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DateFieldButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="34" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+
+        <!-- Issue list row: title + latest-message preview + relative time, with hover/selected chrome. -->
+        <Style x:Key="IssueListItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Margin" Value="8,3" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Border x:Name="ItemBorder"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14,11">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Compact icon buttons for the message actions (edit / remove). -->
+        <Style x:Key="MessageActionButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="Bg"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6">
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       FontFamily="{TemplateBinding FontFamily}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Message card. Switches between read-only display and inline edit via IsEditing. -->
+        <DataTemplate x:Key="MessageCardTemplate" DataType="{x:Type models:IssueMessage}">
+            <Border Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="14,11"
+                    Margin="0,0,4,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding HeaderText}"
+                                   FontSize="12.5"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" />
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal">
+                            <StackPanel.Style>
+                                <Style TargetType="{x:Type StackPanel}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Button Style="{StaticResource MessageActionButtonStyle}"
+                                    Content="&#xE70F;"
+                                    ToolTip="{loc:Loc Issues.Action.Edit}"
+                                    Command="{Binding DataContext.BeginEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                            <Button Style="{StaticResource MessageActionButtonStyle}"
+                                    Content="&#xE74D;"
+                                    ToolTip="{loc:Loc Issues.Action.Remove}"
+                                    Command="{Binding DataContext.RemoveMessageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Display mode -->
+                    <RichTextBox Grid.Row="1"
+                                 Margin="0,6,0,0"
+                                 Foreground="{DynamicResource StrongTextBrush}"
+                                 behaviors:TextLinkifier.BoundText="{Binding Content, Mode=OneWay}">
+                        <RichTextBox.Style>
+                            <Style TargetType="{x:Type RichTextBox}" BasedOn="{StaticResource LinkifiedTextStyle}">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </RichTextBox.Style>
+                    </RichTextBox>
+
+                    <!-- Edit mode -->
+                    <StackPanel Grid.Row="1"
+                                Margin="0,8,0,0">
+                        <StackPanel.Style>
+                            <Style TargetType="{x:Type StackPanel}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="170" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="{loc:Loc Issues.Field.MessageDate}"
+                                       FontSize="11.5"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       VerticalAlignment="Center" />
+                            <Grid Grid.Column="2">
+                                <Button x:Name="EditMessageDateField"
+                                        Style="{StaticResource DateFieldButtonStyle}"
+                                        Content="{Binding EditCreatedDateText}"
+                                        Click="EditMessageDateField_Click" />
+                                <Popup x:Name="EditMessageDatePopup"
+                                       PlacementTarget="{Binding ElementName=EditMessageDateField}"
+                                       Placement="Bottom"
+                                       StaysOpen="False"
+                                       AllowsTransparency="True"
+                                       PopupAnimation="Fade">
+                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="16"
+                                            Padding="8">
+                                        <Calendar Style="{StaticResource MaterialDesignCalendarPortrait}"
+                                                  SelectedDate="{Binding EditCreatedDate, Mode=TwoWay}"
+                                                  SelectedDatesChanged="EditMessageDateCalendar_SelectedDatesChanged" />
+                                    </Border>
+                                </Popup>
+                            </Grid>
+
+                            <TextBlock Grid.Column="4"
+                                       Text="{loc:Loc Issues.Field.Author}"
+                                       FontSize="11.5"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBox Grid.Column="6"
+                                     Height="34"
+                                     Text="{Binding EditCreatedBy, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <TextBox MinHeight="64"
+                                 MaxHeight="220"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalContentAlignment="Top"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding EditContent, UpdateSourceTrigger=PropertyChanged}" />
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,8,0,0">
+                            <Button MinWidth="84"
+                                    Margin="0,0,8,0"
+                                    Content="{loc:Loc Common.Cancel}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding DataContext.CancelEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                            <Button MinWidth="84"
+                                    Content="{loc:Loc Issues.Action.Save}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding DataContext.SaveEditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top bar: search + New Issue -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border MinHeight="38"
+                    Background="{DynamicResource ControlBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="34" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="&#xE721;"
+                               FontFamily="Segoe MDL2 Assets"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False" />
+                    <Grid Grid.Column="1" Margin="0,0,10,0">
+                        <TextBox x:Name="SearchBox"
+                                 Style="{StaticResource IssuesBorderlessTextBoxStyle}"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="{loc:Loc Issues.Search.Placeholder}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   VerticalAlignment="Center"
+                                   IsHitTestVisible="False"
+                                   Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource PlaceholderWhenEmpty}}" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Button Grid.Column="2"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    MinWidth="128"
+                    Command="{Binding NewIssueCommand}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE710;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="14"
+                               Foreground="White"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <TextBlock Text="{loc:Loc Issues.NewIssue.Button}"
+                               Foreground="White"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Body: issue list + message thread -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="18" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: issue list -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <Grid>
+                    <ListBox x:Name="IssueList"
+                             ItemsSource="{Binding Issues}"
+                             SelectedItem="{Binding SelectedIssue, Mode=TwoWay}"
+                             SelectionMode="Extended"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Padding="0,8"
+                             HorizontalContentAlignment="Stretch"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ItemContainerStyle="{StaticResource IssueListItemStyle}"
+                             PreviewMouseRightButtonDown="IssueList_PreviewMouseRightButtonDown"
+                             SelectionChanged="IssueList_SelectionChanged">
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="{loc:Loc Issues.Edit.MenuItem}"
+                                          Command="{Binding EditIssueCommand}" />
+                                <MenuItem Header="{loc:Loc Issues.Delete.MenuItem}"
+                                          Command="{Binding RemoveIssueCommand}" />
+                                <Separator />
+                                <MenuItem Header="{loc:Loc Issues.Export.MenuItem}"
+                                          Command="{Binding ExportSelectedIssuesCommand}" />
+                                <MenuItem Header="{loc:Loc Issues.Import.MenuItem}"
+                                          Command="{Binding ImportConversationCommand}" />
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:Issue}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding DisplayTitle}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource StrongTextBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding LatestPreview}"
+                                               FontSize="12.5"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,3,0,0"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding LatestActivityText}"
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- App empty state: no issues at all -->
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="24">
+                        <StackPanel.Style>
+                            <Style TargetType="{x:Type StackPanel}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasIssues}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="{loc:Loc Issues.Empty.Title}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource StrongTextBrush}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{loc:Loc Issues.Empty.Hint}"
+                                   FontSize="12.5"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,14" />
+                        <Button HorizontalAlignment="Center"
+                                MinWidth="128"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Content="{loc:Loc Issues.NewIssue.Button}"
+                                Command="{Binding NewIssueCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Right: message thread + add box -->
+            <Grid Grid.Column="2" x:Name="RightPanelGrid">
+                <!-- No selection hint -->
+                <TextBlock Text="{loc:Loc Issues.NoSelection}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Visibility="{Binding SelectedIssue, Converter={StaticResource VisibleWhenNoSelection}}" />
+
+                <Grid Visibility="{Binding SelectedIssue, Converter={StaticResource VisibleWhenSelected}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Issue note (read-only, links clickable), shown only when the issue has a note.
+                         Collapsed to ~2 lines by default; click to expand, click elsewhere to collapse. -->
+                    <Border Grid.Row="0"
+                            x:Name="NotePanel"
+                            Margin="0,0,4,12"
+                            Padding="14,11"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            PreviewMouseLeftButtonDown="NotePanel_PreviewMouseLeftButtonDown"
+                            Visibility="{Binding SelectedIssue.Note, Converter={StaticResource VisibleWhenNotEmpty}}">
+                        <StackPanel>
+                            <TextBlock Text="{loc:Loc Issues.Field.Note}"
+                                       FontSize="11.5"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,4" />
+                            <Grid>
+                                <RichTextBox x:Name="NoteTextBox"
+                                             Foreground="{DynamicResource StrongTextBrush}"
+                                             Style="{StaticResource LinkifiedTextStyle}"
+                                             TextChanged="NoteTextBox_TextChanged"
+                                             SizeChanged="NoteTextBox_SizeChanged"
+                                             PreviewMouseWheel="NoteTextBox_PreviewMouseWheel"
+                                             behaviors:TextLinkifier.BoundText="{Binding SelectedIssue.Note, Mode=OneWay}" />
+                                <!-- Expand affordance: shown only when collapsed and the note overflows 2 lines. -->
+                                <Border x:Name="NoteExpandChevron"
+                                        VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,0,0,-9"
+                                        Padding="10,2"
+                                        CornerRadius="7"
+                                        Background="{DynamicResource SurfaceBrush}"
+                                        IsHitTestVisible="False"
+                                        Visibility="Collapsed">
+                                    <Path Width="10"
+                                          Height="6"
+                                          Stretch="Fill"
+                                          Data="M 0 0 L 5 5 L 10 0"
+                                          Stroke="{DynamicResource MutedTextBrush}"
+                                          StrokeThickness="1.6"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" />
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Messages -->
+                    <Grid Grid.Row="1">
+                        <ScrollViewer x:Name="MessagesScroll"
+                                      VerticalScrollBarVisibility="Auto"
+                                      Padding="2,0,2,0"
+                                      Visibility="{Binding SelectedIssue.Messages.Count, Converter={StaticResource VisibleWhenAny}}">
+                            <ItemsControl ItemsSource="{Binding SelectedIssue.Messages}"
+                                          ItemTemplate="{StaticResource MessageCardTemplate}" />
+                        </ScrollViewer>
+
+                        <!-- Empty message state -->
+                        <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Margin="24"
+                                    Visibility="{Binding SelectedIssue.Messages.Count, Converter={StaticResource EmptyWhenZero}}">
+                            <TextBlock Text="{loc:Loc Issues.NoMessages.Title}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource StrongTextBrush}"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{loc:Loc Issues.NoMessages.Hint}"
+                                       FontSize="12.5"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Add message area (auto-expands, capped at half the panel height) -->
+                    <Border Grid.Row="2"
+                            Margin="0,12,0,0"
+                            Padding="12,10"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <TextBox x:Name="NewMessageBox"
+                                         MinHeight="44"
+                                         MaxHeight="{Binding ActualHeight, ElementName=RightPanelGrid, Converter={StaticResource HalfHeightConverter}}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalContentAlignment="Top"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Text="{Binding NewMessageText, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="{loc:Loc Issues.Add.Placeholder}"
+                                           Margin="14,0,0,0"
+                                           VerticalAlignment="Top"
+                                           Padding="0,10,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           IsHitTestVisible="False"
+                                           Visibility="{Binding NewMessageText, Converter={StaticResource PlaceholderWhenEmpty}}" />
+                            </Grid>
+
+                            <Grid Grid.Row="1"
+                                  Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="{loc:Loc Issues.Field.MessageDate}"
+                                           FontSize="11.5"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           VerticalAlignment="Center" />
+                                <Grid Grid.Column="2">
+                                    <Button x:Name="NewMessageDateField"
+                                            Style="{StaticResource DateFieldButtonStyle}"
+                                            Content="{Binding NewMessageCreatedDateText}"
+                                            Click="NewMessageDateField_Click" />
+                                    <Popup x:Name="NewMessageDatePopup"
+                                           PlacementTarget="{Binding ElementName=NewMessageDateField}"
+                                           Placement="Bottom"
+                                           StaysOpen="False"
+                                           AllowsTransparency="True"
+                                           PopupAnimation="Fade">
+                                        <Border Background="{DynamicResource SurfaceBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="16"
+                                                Padding="8">
+                                            <Calendar x:Name="NewMessageDateCalendar"
+                                                      Style="{StaticResource MaterialDesignCalendarPortrait}"
+                                                      SelectedDatesChanged="NewMessageDateCalendar_SelectedDatesChanged" />
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+
+                                <TextBlock Grid.Column="4"
+                                           Text="{loc:Loc Issues.Field.Author}"
+                                           FontSize="11.5"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           VerticalAlignment="Center" />
+                                <Grid Grid.Column="6">
+                                    <TextBox x:Name="NewMessageAuthorBox"
+                                             Height="34"
+                                             Text="{Binding NewMessageAuthor, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="{loc:Loc Issues.Add.AuthorPlaceholder}"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               IsHitTestVisible="False"
+                                               Visibility="{Binding Text, ElementName=NewMessageAuthorBox, Converter={StaticResource PlaceholderWhenEmpty}}" />
+                                </Grid>
+
+                                <Button Grid.Column="8"
+                                        Margin="0,0,0,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        MinWidth="96"
+                                        Content="{loc:Loc Issues.Add.Button}"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding AddMessageCommand}" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

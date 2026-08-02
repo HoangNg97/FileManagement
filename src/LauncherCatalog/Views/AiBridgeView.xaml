@@ -1,0 +1,275 @@
+<UserControl x:Class="LauncherCatalog.Views.AiBridgeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:LauncherCatalog.Converters"
+             xmlns:loc="clr-namespace:LauncherCatalog.Services"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+    <UserControl.Resources>
+        <conv:StringNullOrEmptyToVisibilityConverter x:Key="HasTextToVisibilityConverter" Invert="True" />
+
+        <Style x:Key="AiBridgeCardStyle" TargetType="{x:Type Border}">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="22,20" />
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+
+        <!-- Selectable (read-only) text so users can highlight/copy any label or message. -->
+        <Style x:Key="AiBridgeHeadingStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+        </Style>
+
+        <Style x:Key="AiBridgeSubtitleStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Margin" Value="0,6,0,0" />
+        </Style>
+
+        <Style x:Key="AiBridgeCardTitleStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+        </Style>
+
+        <Style x:Key="AiBridgeCardHintStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+
+        <Style x:Key="AiBridgeFieldLabelStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+        </Style>
+
+        <Style x:Key="AiBridgeStatusStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="AiBridgeSignInStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="AiBridgeMessageStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+            <Setter Property="Margin" Value="4,2,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Padding="0,0,6,0">
+        <Grid HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="1"
+                        Width="640"
+                        Margin="0,4,0,24">
+
+                <!-- Header -->
+                <StackPanel Margin="0,0,0,18">
+                    <TextBox Text="{loc:Loc AiBridge.Title}"
+                             Style="{StaticResource AiBridgeHeadingStyle}" />
+                    <TextBox Text="{loc:Loc AiBridge.Subtitle}"
+                             Style="{StaticResource AiBridgeSubtitleStyle}" />
+                </StackPanel>
+
+                <!-- Status banner -->
+                <Border Style="{StaticResource AiBridgeCardStyle}"
+                        Background="{DynamicResource PageBrush}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="12" Height="12" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="{x:Type Ellipse}">
+                                    <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                            <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBox Text="{Binding StatusText, Mode=OneWay}"
+                                 Margin="12,0,0,0"
+                                 Style="{StaticResource AiBridgeStatusStyle}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Enable toggle -->
+                <Border Style="{StaticResource AiBridgeCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBox Text="{loc:Loc AiBridge.Enable.Title}"
+                                     Style="{StaticResource AiBridgeCardTitleStyle}" />
+                            <TextBox Text="{loc:Loc AiBridge.Enable.Hint}"
+                                     Style="{StaticResource AiBridgeCardHintStyle}" />
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                      IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                    </Grid>
+                </Border>
+
+                <!-- Connection (port + endpoint) -->
+                <Border Style="{StaticResource AiBridgeCardStyle}">
+                    <StackPanel>
+                        <TextBox Text="{loc:Loc AiBridge.Connection.Title}"
+                                 Style="{StaticResource AiBridgeCardTitleStyle}" />
+                        <TextBox Text="{loc:Loc AiBridge.Connection.Hint}"
+                                 Style="{StaticResource AiBridgeCardHintStyle}" />
+
+                        <TextBox Text="{loc:Loc AiBridge.Port.Label}"
+                                 Margin="0,16,0,6"
+                                 Style="{StaticResource AiBridgeFieldLabelStyle}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding PortText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="5" />
+                            <Button Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    Content="{loc:Loc AiBridge.Port.Apply}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding ApplyPortCommand}" />
+                        </Grid>
+
+                        <TextBox Text="{loc:Loc AiBridge.Endpoint.Label}"
+                                 Margin="0,18,0,6"
+                                 Style="{StaticResource AiBridgeFieldLabelStyle}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource ControlMutedBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,9">
+                                <TextBox Style="{StaticResource SelectableTextBoxStyle}"
+                                         Foreground="{DynamicResource StrongTextBrush}"
+                                         FontFamily="Consolas"
+                                         Text="{Binding EndpointUrl, Mode=OneWay}" />
+                            </Border>
+                            <Button Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    Content="{loc:Loc AiBridge.Action.Copy}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding CopyEndpointCommand}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bearer token -->
+                <Border Style="{StaticResource AiBridgeCardStyle}">
+                    <StackPanel>
+                        <TextBox Text="{loc:Loc AiBridge.Token.Title}"
+                                 Style="{StaticResource AiBridgeCardTitleStyle}" />
+                        <TextBox Text="{loc:Loc AiBridge.Token.Hint}"
+                                 Style="{StaticResource AiBridgeCardHintStyle}" />
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource ControlMutedBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,9">
+                                <TextBox Style="{StaticResource SelectableTextBoxStyle}"
+                                         Foreground="{DynamicResource StrongTextBrush}"
+                                         FontFamily="Consolas"
+                                         TextWrapping="NoWrap"
+                                         Text="{Binding DisplayToken, Mode=OneWay}" />
+                            </Border>
+                            <Button Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    Content="{Binding ToggleTokenVisibilityLabel}"
+                                    MinWidth="78"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding ToggleTokenVisibilityCommand}" />
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="{loc:Loc AiBridge.Action.Copy}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding CopyTokenCommand}" />
+                            <Button Content="{loc:Loc AiBridge.Token.Regenerate}"
+                                    Margin="10,0,0,0"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding RegenerateTokenCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Gemini sign-in -->
+                <Border Style="{StaticResource AiBridgeCardStyle}">
+                    <StackPanel>
+                        <TextBox Text="{loc:Loc AiBridge.Gemini.Title}"
+                                 Style="{StaticResource AiBridgeCardTitleStyle}" />
+                        <TextBox Text="{loc:Loc AiBridge.Gemini.Hint}"
+                                 Style="{StaticResource AiBridgeCardHintStyle}" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0" VerticalAlignment="Center">
+                            <Ellipse Width="11" Height="11" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="{x:Type Ellipse}">
+                                        <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSignedIn}" Value="True">
+                                                <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBox Text="{Binding SignInStatusText, Mode=OneWay}"
+                                     Margin="10,0,0,0"
+                                     Style="{StaticResource AiBridgeSignInStyle}" />
+                        </StackPanel>
+
+                        <Button Content="{Binding LoginButtonText}"
+                                HorizontalAlignment="Left"
+                                Margin="0,14,0,0"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding LoginCommand}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Inline status message -->
+                <TextBox Text="{Binding StatusMessage, Mode=OneWay}"
+                         Style="{StaticResource AiBridgeMessageStyle}"
+                         Visibility="{Binding StatusMessage, Converter={StaticResource HasTextToVisibilityConverter}}" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -498,7 +498,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
             return;
         }
 
-        var note = EventNote.Trim();
+        var note = EventNote;
         if (string.IsNullOrWhiteSpace(note))
         {
             StatusMessage = _localizer.Get("History.Message.EventNoteRequired");
@@ -540,8 +540,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
             return;
         }
 
-        var trimmedNote = note.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedNote))
+        if (string.IsNullOrWhiteSpace(note))
         {
             StatusMessage = _localizer.Get("History.Message.EventNoteRequired");
             return;
@@ -553,7 +552,7 @@ public sealed class HistoryManagementViewModel : ObservableObject
             Id = Guid.NewGuid(),
             HistoryFileId = SelectedFile.Id,
             EventDate = eventDate.Date,
-            Note = trimmedNote,
+            Note = note,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -569,15 +568,14 @@ public sealed class HistoryManagementViewModel : ObservableObject
 
     public async Task UpdateEventAsync(HistoryEventItem historyEvent, DateTime eventDate, string note)
     {
-        var trimmedNote = note.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedNote))
+        if (string.IsNullOrWhiteSpace(note))
         {
             StatusMessage = _localizer.Get("History.Message.EventNoteRequired");
             return;
         }
 
         historyEvent.EventDate = eventDate.Date;
-        historyEvent.Note = trimmedNote;
+        historyEvent.Note = note;
         await _repository.UpdateEventAsync(historyEvent);
         RefreshAfterEventChange(historyEvent.Id);
         SelectEvent(historyEvent);

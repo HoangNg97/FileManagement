@@ -12,6 +12,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using LauncherCatalog.Models;
 using LauncherCatalog.Services;
+using LauncherCatalog.Services.Ai;
 using LauncherCatalog.ViewModels;
 using LauncherCatalog.Views;
 using DrawingIcon = System.Drawing.Icon;
@@ -30,9 +31,12 @@ public partial class MainWindow : Window
     private readonly DatabaseBackupService _databaseBackupService;
     private readonly StartupLaunchService _startupLaunchService;
     private readonly GlobalHotkeyService _hotkeyService = new();
+    private readonly ChatViewModel _chatViewModel;
+    private bool _isChatOpen;
     private HwndSource? _hwndSource;
     private QuickSearchWindow? _quickSearchWindow;
     private bool _isQuitting;
+    private bool _lastBalloonWasSignIn;
 
     public MainWindow()
     {
@@ -44,6 +48,8 @@ public partial class MainWindow : Window
         var entryRepository = new EntryRepository();
         var taskRepository = new TaskRepository();
         var noteRepository = new NoteRepository();
+        var issueRepository = new IssueRepository();
+        var historyRepository = new HistoryRepository();
         _everythingSearchService = new EverythingSearchService();
 
         _viewModel = new MainViewModel(
@@ -66,9 +72,23 @@ public partial class MainWindow : Window
                 DatabaseBackupTarget.FromPath(entryRepository.StoragePath),
                 DatabaseBackupTarget.FromPath(taskRepository.StoragePath),
                 DatabaseBackupTarget.FromPath(noteRepository.StoragePath),
+                DatabaseBackupTarget.FromPath(issueRepository.StoragePath),
                 DatabaseBackupTarget.FromPath(HistoryRepository.DefaultStoragePath)
             ]);
         _startupLaunchService = new StartupLaunchService();
+
+        _chatViewModel = new ChatViewModel(
+            AiBridgeManager.Current,
+            new ChatContextExporter(entryRepository, taskRepository, noteRepository, historyRepository, issueRepository),
+            GetActiveChatContextTab);
+        ChatPanel.AttachViewModel(_chatViewModel);
+        ChatPanel.CloseRequested += (_, _) => HideChatPanel();
+        MainTabs.SelectionChanged += MainTabs_SelectionChanged;
+        // Close the chat overlay when the user clicks anywhere outside it (except the toggle button,
+        // which already handles open/close on its own). PreviewMouseDown catches the click before
+        // controls consume it, and Deactivated covers alt-tab / clicking outside the whole app.
+        PreviewMouseDown += MainWindow_PreviewMouseDown;
+        Deactivated += (_, _) => { if (_isChatOpen) HideChatPanel(); };
 
         DataContext = _viewModel;
         SourceInitialized += MainWindow_SourceInitialized;
@@ -83,6 +103,7 @@ public partial class MainWindow : Window
             () => _viewModel.GetAllTasksSnapshot(),
             ShowTaskReminderNotification);
         _hotkeyService.HotkeyPressed += (_, _) => ShowQuickSearch();
+        AiBridgeManager.Current.SignInRequired += OnGeminiSignInRequired;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -103,6 +124,19 @@ public partial class MainWindow : Window
         _ = _everythingSearchService.EnsureStartedAsync();
         _taskReminderService.Start();
         RegisterQuickSearchHotkey(showWarning: false);
+        await EnsureAiBridgeStartedAsync();
+    }
+
+    private async Task EnsureAiBridgeStartedAsync()
+    {
+        try
+        {
+            await AiBridgeManager.Current.InitializeAsync();
+        }
+        catch (Exception exception)
+        {
+            AppLogger.WriteInfo($"AI bridge failed to start: {exception.Message}");
+        }
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -137,6 +171,7 @@ public partial class MainWindow : Window
                 RestoreFromTray();
             }
         };
+        notifyIcon.BalloonTipClicked += (_, _) => OnBalloonTipClicked();
 
         return notifyIcon;
     }
@@ -186,6 +221,16 @@ public partial class MainWindow : Window
         _hotkeyService.Dispose();
         _taskReminderService.Dispose();
         _databaseBackupService.Dispose();
+        AiBridgeManager.Current.SignInRequired -= OnGeminiSignInRequired;
+        try
+        {
+            AiBridgeManager.Current.ShutdownAsync().Wait(TimeSpan.FromSeconds(3));
+        }
+        catch (Exception exception)
+        {
+            AppLogger.WriteInfo($"AI bridge shutdown error: {exception.Message}");
+        }
+
         _trayIcon.Visible = false;
         _trayIcon.Dispose();
     }
@@ -220,7 +265,46 @@ public partial class MainWindow : Window
         _trayIcon.BalloonTipTitle = title;
         _trayIcon.BalloonTipText = message;
         _trayIcon.BalloonTipIcon = Forms.ToolTipIcon.Info;
-        _trayIcon.ShowBalloonTip(10000);
+        _lastBalloonWasSignIn = false;
+
+        // Keep task reminders visible in Windows notification center until the user clears them,
+        // matching the persistent behavior used by the Gemini sign-in warning.
+        _trayIcon.ShowBalloonTip(30000);
+    }
+
+    /// <summary>
+    /// Fired (on a worker thread) when a Gemini request was rejected because the session was silently
+    /// signed out. Marshals to the UI thread and shows a tray notification that persists in the
+    /// Windows notification center until dismissed, so the user notices even if the app is minimized.
+    /// </summary>
+    private void OnGeminiSignInRequired(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke(new Action(ShowGeminiSignInRequiredNotification));
+    }
+
+    private void ShowGeminiSignInRequiredNotification()
+    {
+        var localizer = LocalizationService.Current;
+        _trayIcon.BalloonTipTitle = localizer.Get("AiBridge.SignInRequired.Title");
+        _trayIcon.BalloonTipText = localizer.Get("AiBridge.SignInRequired.Message");
+        _trayIcon.BalloonTipIcon = Forms.ToolTipIcon.Warning;
+        _lastBalloonWasSignIn = true;
+
+        // On Windows 10/11 the toast is shown briefly and then kept in the notification center
+        // until the user dismisses it, so it is not lost while the window is minimized.
+        _trayIcon.ShowBalloonTip(30000);
+    }
+
+    private void OnBalloonTipClicked()
+    {
+        RestoreFromTray();
+
+        // If the last notification was the Gemini sign-in prompt, take the user straight to the
+        // AI Bridge tab where the "Log in to Gemini" action lives.
+        if (_lastBalloonWasSignIn && AiBridgeTab is not null)
+        {
+            AiBridgeTab.IsSelected = true;
+        }
     }
 
     private void QuitFromTray()
@@ -230,26 +314,132 @@ public partial class MainWindow : Window
         Close();
     }
 
-    private async void ShortcutSettings_Click(object sender, RoutedEventArgs e)
+    private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new HotkeySettingsDialog(_viewModel.QuickSearchHotkeyText)
+        var dialog = new SettingsWindow(_viewModel, ApplyQuickSearchHotkeyAsync)
         {
             Owner = this
         };
 
         dialog.ShowDialog();
-        if (!HotkeyGesture.TryParse(dialog.HotkeyText, out _))
+    }
+
+    private void Chat_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isChatOpen)
+        {
+            HideChatPanel();
+        }
+        else
+        {
+            ShowChatPanel();
+        }
+    }
+
+    private void ShowChatPanel()
+    {
+        _chatViewModel.RefreshActiveTab();
+        ChatPanel.ShowAnimated();
+        _isChatOpen = true;
+    }
+
+    private void HideChatPanel()
+    {
+        ChatPanel.HideAnimated();
+        _isChatOpen = false;
+    }
+
+    /// <summary>
+    /// Collapses the chat overlay when the user clicks anywhere that is not inside the panel or on
+    /// the chat toggle button (which handles its own open/close). Walks the visual tree from the
+    /// click's original source; if neither the panel nor the button is an ancestor, hides the panel.
+    /// </summary>
+    private void MainWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isChatOpen)
+        {
+            return;
+        }
+
+        if (e.OriginalSource is not DependencyObject source)
+        {
+            return;
+        }
+
+        for (var node = source; node is not null; node = VisualTreeHelperParent(node))
+        {
+            if (ReferenceEquals(node, ChatPanel) || ReferenceEquals(node, ChatButton))
+            {
+                return;
+            }
+        }
+
+        HideChatPanel();
+    }
+
+    private static DependencyObject? VisualTreeHelperParent(DependencyObject node)
+    {
+        // Prefer the visual parent so popups/tooltips still resolve to the panel that owns them;
+        // fall back to the logical parent for non-visual descendants (e.g. FlowDocument runs).
+        return node is Visual or System.Windows.Media.Media3D.Visual3D
+            ? VisualTreeHelper.GetParent(node)
+            : LogicalTreeHelper.GetParent(node);
+    }
+
+    /// <summary>
+    /// Maps the currently-selected tab in <see cref="MainTabs"/> to a <see cref="ChatContextTab"/>.
+    /// Tab order in <c>MainWindow.xaml</c>: Catalog, Tasks, Note, History Management, Issues, AI Bridge.
+    /// AI Bridge itself does not participate in chat context, so it maps to <c>Unsupported</c>.
+    /// </summary>
+    private ChatContextTab GetActiveChatContextTab()
+    {
+        return MainTabs.SelectedIndex switch
+        {
+            0 => ChatContextTab.Catalog,
+            1 => ChatContextTab.Tasks,
+            2 => ChatContextTab.Note,
+            3 => ChatContextTab.HistoryManagement,
+            4 => ChatContextTab.Issues,
+            _ => ChatContextTab.Unsupported
+        };
+    }
+
+    /// <summary>
+    /// Keeps the chat panel's header/placeholder/empty-state in sync with the currently focused
+    /// tab while the panel is open. Ignored bubbles coming from nested TabControls inside a view
+    /// by filtering on the sender.
+    /// </summary>
+    private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, MainTabs))
+        {
+            return;
+        }
+        if (_isChatOpen)
+        {
+            _chatViewModel.RefreshActiveTab();
+        }
+    }
+
+    /// <summary>
+    /// Validates, registers, and persists a candidate quick-search shortcut. Returns whether it was
+    /// applied; used by the Settings window so hotkey OS registration stays where the window handle is.
+    /// </summary>
+    private async Task<bool> ApplyQuickSearchHotkeyAsync(string hotkeyText)
+    {
+        if (!HotkeyGesture.TryParse(hotkeyText, out _))
         {
             System.Windows.MessageBox.Show(this, LocalizationService.Current.Get("Settings.Hotkey.Invalid"), LocalizationService.Current.Get("Common.AppName"), MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            return false;
         }
 
-        if (!TryRegisterQuickSearchHotkey(dialog.HotkeyText, showWarning: true))
+        if (!TryRegisterQuickSearchHotkey(hotkeyText, showWarning: true))
         {
-            return;
+            return false;
         }
 
-        await _viewModel.UpdateQuickSearchHotkeyAsync(dialog.HotkeyText);
+        await _viewModel.UpdateQuickSearchHotkeyAsync(hotkeyText);
+        return true;
     }
 
     private async void RestoreLatestBackup_Click(object sender, RoutedEventArgs e)

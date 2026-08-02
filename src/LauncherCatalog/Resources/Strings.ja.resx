@@ -51,6 +51,112 @@
   <data name="Main.Tab.Tasks" xml:space="preserve"><value>タスク</value></data>
   <data name="Main.Tab.HistoryManagement" xml:space="preserve"><value>履歴管理</value></data>
   <data name="Main.Tab.Note" xml:space="preserve"><value>メモ</value></data>
+  <data name="Main.Tab.Issues" xml:space="preserve"><value>課題</value></data>
+  <data name="Main.Tab.AiBridge" xml:space="preserve"><value>AIブリッジ</value></data>
+  <data name="AiBridge.Title" xml:space="preserve"><value>AIブリッジ</value></data>
+  <data name="AiBridge.Subtitle" xml:space="preserve"><value>Gmail用Chrome拡張機能がWorkSync経由でAIリクエストを実行できるローカルHTTPゲートウェイです。ループバックのみで待ち受け、ベアラートークンで保護されます。</value></data>
+  <data name="AiBridge.Status.Running" xml:space="preserve"><value>http://127.0.0.1:{0} で稼働中</value></data>
+  <data name="AiBridge.Status.PortInUse" xml:space="preserve"><value>ポート {0} は既に使用されています。別のポートを指定して起動してください。</value></data>
+  <data name="AiBridge.Status.Error" xml:space="preserve"><value>起動できませんでした: {0}</value></data>
+  <data name="AiBridge.Status.Disabled" xml:space="preserve"><value>無効</value></data>
+  <data name="AiBridge.Enable.Title" xml:space="preserve"><value>AIブリッジを有効化</value></data>
+  <data name="AiBridge.Enable.Hint" xml:space="preserve"><value>ローカルサーバーを起動して拡張機能が接続できるようにします。オフにすると待ち受けを停止します。</value></data>
+  <data name="AiBridge.Connection.Title" xml:space="preserve"><value>接続</value></data>
+  <data name="AiBridge.Connection.Hint" xml:space="preserve"><value>ブリッジは 127.0.0.1 のみにバインドされ、ネットワークには公開されません。</value></data>
+  <data name="AiBridge.Port.Label" xml:space="preserve"><value>ポート</value></data>
+  <data name="AiBridge.Port.Apply" xml:space="preserve"><value>適用</value></data>
+  <data name="AiBridge.Endpoint.Label" xml:space="preserve"><value>エンドポイントURL</value></data>
+  <data name="AiBridge.Action.Copy" xml:space="preserve"><value>コピー</value></data>
+  <data name="AiBridge.Token.Title" xml:space="preserve"><value>アクセストークン</value></data>
+  <data name="AiBridge.Token.Hint" xml:space="preserve"><value>拡張機能はこれを Authorization: Bearer ヘッダーとして送信する必要があります。第三者に知られないようにしてください。再生成すると古いトークンは直ちに無効になります。</value></data>
+  <data name="AiBridge.Token.Regenerate" xml:space="preserve"><value>再生成</value></data>
+  <data name="AiBridge.Token.Show" xml:space="preserve"><value>表示</value></data>
+  <data name="AiBridge.Token.Hide" xml:space="preserve"><value>非表示</value></data>
+  <data name="AiBridge.Gemini.Title" xml:space="preserve"><value>Geminiサインイン</value></data>
+  <data name="AiBridge.Gemini.Hint" xml:space="preserve"><value>ブリッジは実際のブラウザでGeminiサイトを操作してリクエストに応答します。一度サインインすればセッションは保持されます。ログイン用のブラウザウィンドウが開きます（2段階認証はそこで対応）。</value></data>
+  <data name="AiBridge.Gemini.Login" xml:space="preserve"><value>Geminiにログイン</value></data>
+  <data name="AiBridge.Gemini.Relogin" xml:space="preserve"><value>Geminiサインインを再度開く</value></data>
+  <data name="AiBridge.Gemini.SignedIn" xml:space="preserve"><value>Geminiにサインイン済み</value></data>
+  <data name="AiBridge.Gemini.SignedOut" xml:space="preserve"><value>未サインイン</value></data>
+  <data name="AiBridge.SignInRequired.Title" xml:space="preserve"><value>Geminiへのサインインが必要です</value></data>
+  <data name="AiBridge.SignInRequired.Message" xml:space="preserve"><value>サインアウトされているため、WorkSyncはGeminiに接続できませんでした。ここをクリック（またはWorkSyncを開いて）再度サインインすると、AIリクエストを引き続き利用できます。</value></data>
+  <data name="Issues.Search.Placeholder" xml:space="preserve"><value>課題またはメッセージを検索...</value></data>
+  <data name="Issues.NewIssue.Button" xml:space="preserve"><value>新しい課題</value></data>
+  <data name="Issues.NewIssue.Title" xml:space="preserve"><value>新しい課題</value></data>
+  <data name="Issues.NewIssue.Create" xml:space="preserve"><value>作成</value></data>
+  <data name="Issues.EditIssue.Title" xml:space="preserve"><value>課題を編集</value></data>
+  <data name="Issues.Field.Title" xml:space="preserve"><value>課題のタイトル</value></data>
+  <data name="Issues.Field.Note" xml:space="preserve"><value>メモ（任意）</value></data>
+  <data name="Issues.Field.Author" xml:space="preserve"><value>担当者</value></data>
+  <data name="Issues.Field.MessageDate" xml:space="preserve"><value>メッセージ日時</value></data>
+  <data name="Issues.Validation.TitleRequired" xml:space="preserve"><value>課題のタイトルは必須です。</value></data>
+  <data name="Issues.Validation.EmptyMessage" xml:space="preserve"><value>メッセージを空にすることはできません。</value></data>
+  <data name="Issues.Add.Button" xml:space="preserve"><value>追加</value></data>
+  <data name="Issues.Add.Placeholder" xml:space="preserve"><value>メッセージを入力...</value></data>
+  <data name="Issues.Add.AuthorPlaceholder" xml:space="preserve"><value>名前を入力...</value></data>
+  <data name="Issues.Action.Edit" xml:space="preserve"><value>編集</value></data>
+  <data name="Issues.Action.Remove" xml:space="preserve"><value>削除</value></data>
+  <data name="Issues.Action.Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Issues.Edit.MenuItem" xml:space="preserve"><value>課題を編集</value></data>
+  <data name="Issues.Delete.MenuItem" xml:space="preserve"><value>課題を削除</value></data>
+  <data name="Issues.RemoveIssue.Title" xml:space="preserve"><value>課題を削除</value></data>
+  <data name="Issues.RemoveIssue.Confirm" xml:space="preserve"><value>この課題とすべてのメッセージを削除しますか？この操作は元に戻せません。</value></data>
+  <data name="Issues.Remove.Title" xml:space="preserve"><value>メッセージを削除</value></data>
+  <data name="Issues.Remove.Confirm" xml:space="preserve"><value>このメッセージを削除しますか？この操作は元に戻せません。</value></data>
+  <data name="Issues.Empty.Title" xml:space="preserve"><value>課題はまだありません。</value></data>
+  <data name="Issues.Empty.Hint" xml:space="preserve"><value>最初の課題を作成して、会話履歴の保存を始めましょう。</value></data>
+  <data name="Issues.NoMessages.Title" xml:space="preserve"><value>メッセージはまだありません。</value></data>
+  <data name="Issues.NoMessages.Hint" xml:space="preserve"><value>下にメッセージを入力して、この課題の履歴を追加します。</value></data>
+  <data name="Issues.NoSelection" xml:space="preserve"><value>課題を選択すると履歴が表示されます。</value></data>
+  <data name="Issues.UntitledIssue" xml:space="preserve"><value>無題の課題</value></data>
+  <data name="Issues.UnknownAuthor" xml:space="preserve"><value>不明</value></data>
+  <data name="Issues.NoMessagesPreview" xml:space="preserve"><value>メッセージはまだありません</value></data>
+  <data name="Issues.EditedMarker" xml:space="preserve"><value>編集済み</value></data>
+  <data name="Issues.Export.MenuItem" xml:space="preserve"><value>Excel シートにエクスポート</value></data>
+  <data name="Issues.Export.DefaultFileName" xml:space="preserve"><value>課題</value></data>
+  <data name="Issues.Export.NoSelection" xml:space="preserve"><value>エクスポートする課題を 1 つ以上選択してください。</value></data>
+  <data name="Issues.Export.Complete" xml:space="preserve"><value>{0} 件の課題を Excel にエクスポートしました。</value></data>
+  <data name="Issues.Export.Failed" xml:space="preserve"><value>エクスポートに失敗しました: {0}</value></data>
+  <data name="Issues.Import.MenuItem" xml:space="preserve"><value>会話をインポート</value></data>
+  <data name="Issues.Import.Title" xml:space="preserve"><value>会話をインポート</value></data>
+  <data name="Issues.Import.PromptLabel" xml:space="preserve"><value>インポート用 JSON ファイルを生成するためのプロンプト</value></data>
+  <data name="Issues.Import.Prompt" xml:space="preserve"><value>これまでの会話を、ダウンロードできる 1 つの JSON ファイルにまとめてください。余計なテキスト・コメント・コードフェンスは付けず、JSON のみを出力し、ダウンロード可能な .json ファイルとして提供してください。
+
+次の構造を厳密に使用します:
+{
+  "messages": [
+    { "author": "名前", "date": "2026-07-01T14:30:00", "content": "メッセージ本文" }
+  ]
+}
+
+ルール:
+- 会話中のすべてのメッセージを、出現する順序で含めてください。
+- "messages" は配列です。
+- "author" は送信者の名前です（例: 私、あなた）。
+- "date" は ISO-8601 形式（yyyy-MM-ddTHH:mm:ss）です。時刻が不明な場合は "date" フィールドを省略してください。
+- "content" はメッセージの全文です。メッセージ内の改行には \n を使用します。</value></data>
+  <data name="Issues.Import.FileLabel" xml:space="preserve"><value>選択したファイル</value></data>
+  <data name="Issues.Import.NoFile" xml:space="preserve"><value>ファイルが選択されていません</value></data>
+  <data name="Issues.Import.Open" xml:space="preserve"><value>開く</value></data>
+  <data name="Issues.Import.Import" xml:space="preserve"><value>インポート</value></data>
+  <data name="Issues.Import.Complete" xml:space="preserve"><value>{0} 件のメッセージをインポートしました。</value></data>
+  <data name="Issues.Import.NoNew" xml:space="preserve"><value>インポートする新しいメッセージはありませんでした（すべて既に存在します）。</value></data>
+  <data name="Issues.Import.Failed" xml:space="preserve"><value>インポートに失敗しました: {0}</value></data>
+  <data name="Time.JustNow" xml:space="preserve"><value>たった今</value></data>
+  <data name="Time.MinutesAgo" xml:space="preserve"><value>{0}分前</value></data>
+  <data name="Time.HoursAgo" xml:space="preserve"><value>{0}時間前</value></data>
+  <data name="Time.Yesterday" xml:space="preserve"><value>昨日</value></data>
+  <data name="Time.DaysAgo" xml:space="preserve"><value>{0}日前</value></data>
+  <data name="AiBridge.Message.PortApplied" xml:space="preserve"><value>ポートを更新しました。</value></data>
+  <data name="AiBridge.Message.InvalidPort" xml:space="preserve"><value>1〜65535のポート番号を入力してください。</value></data>
+  <data name="AiBridge.Message.TokenRegenerated" xml:space="preserve"><value>新しいトークンを生成しました。以前のトークンは使用できません。</value></data>
+  <data name="AiBridge.Message.TokenCopied" xml:space="preserve"><value>トークンをクリップボードにコピーしました。</value></data>
+  <data name="AiBridge.Message.EndpointCopied" xml:space="preserve"><value>エンドポイントURLをクリップボードにコピーしました。</value></data>
+  <data name="AiBridge.Message.CopyFailed" xml:space="preserve"><value>クリップボードにアクセスできませんでした。</value></data>
+  <data name="AiBridge.Message.LoginPlanned" xml:space="preserve"><value>Geminiサインインは今後のアップデートで利用可能になります。</value></data>
+  <data name="AiBridge.Message.LoginInProgress" xml:space="preserve"><value>Geminiサインイン用のブラウザを開いています。そのウィンドウでログインを完了してください…</value></data>
+  <data name="AiBridge.Message.LoginSucceeded" xml:space="preserve"><value>Geminiにサインインしました。ブリッジがリクエストに応答できます。</value></data>
+  <data name="AiBridge.Message.LoginNotDetected" xml:space="preserve"><value>サインインを検出できませんでした。ログインを完了してから再度お試しください。</value></data>
   <data name="Main.Action.AddApp" xml:space="preserve"><value>アプリを追加</value></data>
   <data name="Main.Action.AddFolder" xml:space="preserve"><value>フォルダーを追加</value></data>
   <data name="Main.Action.AddToCatalog" xml:space="preserve"><value>カタログに追加</value></data>
@@ -67,7 +173,7 @@
   <data name="Main.Tooltip.SearchNotes" xml:space="preserve"><value>メモのタイトル、内容、タグを検索</value></data>
   <data name="Main.Tooltip.NoteTitle" xml:space="preserve"><value>メモのタイトル</value></data>
   <data name="Main.Tooltip.NoteTags" xml:space="preserve"><value>カンマ区切りのタグ 例: 仕事, アイデア, 急ぎ</value></data>
-  <data name="Main.Tooltip.NoteBody" xml:space="preserve"><value>ここにメモを書いてください。- [ ] と - [x] の行はプレビューで認識されます。</value></data>
+  <data name="Main.Tooltip.NoteBody" xml:space="preserve"><value>ここにメモを書いてください。http/https の URL は編集中に自動でクリック可能になります。</value></data>
   <data name="Main.QuickSearchTooltip" xml:space="preserve"><value>クイック検索ショートカット: {0}</value></data>
   <data name="Backup.RestoreLatest.Tooltip" xml:space="preserve"><value>バックアップから復元</value></data>
   <data name="Backup.RestoreLatest.Title" xml:space="preserve"><value>バックアップを復元</value></data>
@@ -313,6 +419,22 @@
   <data name="Settings.Theme.LightEnabled" xml:space="preserve"><value>ライトモードを有効にしました。</value></data>
   <data name="Settings.Language.Updated" xml:space="preserve"><value>言語を {0} に変更しました。</value></data>
   <data name="Settings.Language.SaveFailed" xml:space="preserve"><value>言語は変更されましたが、保存に失敗しました。</value></data>
+  <data name="Settings.Open.Tooltip" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings.Window.Title" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings.Category.General" xml:space="preserve"><value>一般</value></data>
+  <data name="Settings.Section.Appearance" xml:space="preserve"><value>外観</value></data>
+  <data name="Settings.Appearance.ThemeLabel" xml:space="preserve"><value>テーマ</value></data>
+  <data name="Settings.Appearance.ThemeHint" xml:space="preserve"><value>ライトまたはダークモードを選択します。変更はすぐに適用されます。</value></data>
+  <data name="Settings.Appearance.DarkMode" xml:space="preserve"><value>ダークモード</value></data>
+  <data name="Settings.Section.Language" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings.Language.Label" xml:space="preserve"><value>表示言語</value></data>
+  <data name="Settings.Language.Hint" xml:space="preserve"><value>アプリの言語を切り替えます。変更はすぐに適用されます。</value></data>
+  <data name="Settings.Section.QuickSearch" xml:space="preserve"><value>クイック検索</value></data>
+  <data name="Settings.QuickSearch.Label" xml:space="preserve"><value>クイック検索ショートカット</value></data>
+  <data name="Settings.QuickSearch.Hint" xml:space="preserve"><value>どこからでもクイック検索を開くグローバルショートカット。変更はすぐに適用されます。</value></data>
+  <data name="Settings.QuickSearch.Change" xml:space="preserve"><value>変更</value></data>
+  <data name="Settings.QuickSearch.Listening" xml:space="preserve"><value>ショートカットを押してください…</value></data>
+  <data name="Common.Ok" xml:space="preserve"><value>OK</value></data>
   <data name="Hotkey.Modifier.Ctrl" xml:space="preserve"><value>Ctrl</value></data>
   <data name="Hotkey.Modifier.Alt" xml:space="preserve"><value>Alt</value></data>
   <data name="Hotkey.Modifier.Shift" xml:space="preserve"><value>Shift</value></data>
@@ -339,4 +461,21 @@
   <data name="Everything.SavedStatus.Everything" xml:space="preserve"><value>Everything</value></data>
   <data name="Language.English" xml:space="preserve"><value>英語</value></data>
   <data name="Language.Japanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Chat.Open.Tooltip" xml:space="preserve"><value>現在のタブについて Gemini に質問</value></data>
+  <data name="Chat.Header" xml:space="preserve"><value>Gemini に質問 · {0}</value></data>
+  <data name="Chat.Subtitle" xml:space="preserve"><value>回答には現在のタブのデータのみを使用します。</value></data>
+  <data name="Chat.InputPlaceholder" xml:space="preserve"><value>{0} について質問…</value></data>
+  <data name="Chat.Send" xml:space="preserve"><value>送信</value></data>
+  <data name="Chat.NewConversation" xml:space="preserve"><value>新しい会話</value></data>
+  <data name="Chat.Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Chat.EmptyState" xml:space="preserve"><value>{0} について会話を始めましょう。このタブのデータは最初のメッセージに添付されます。</value></data>
+  <data name="Chat.Thinking" xml:space="preserve"><value>考え中…</value></data>
+  <data name="Chat.SendingContext" xml:space="preserve"><value>データを送信中 ({0}/{1})…</value></data>
+  <data name="Chat.EmptyReply" xml:space="preserve"><value>Gemini から回答が返ってきませんでした。</value></data>
+  <data name="Chat.UnsupportedTab" xml:space="preserve"><value>このタブではチャットを利用できません。</value></data>
+  <data name="Chat.Error.Disabled" xml:space="preserve"><value>AI Bridge が無効です。「AI Bridge」タブから有効にしてください。</value></data>
+  <data name="Chat.Error.NotSignedIn" xml:space="preserve"><value>「AI Bridge」タブから Gemini にサインインしてください。</value></data>
+  <data name="Chat.Error.PortInUse" xml:space="preserve"><value>AI Bridge のポートが使用中です。「AI Bridge」タブで変更してください。</value></data>
+  <data name="Chat.Error.Failed" xml:space="preserve"><value>Gemini から回答を得られませんでした: {0}
+(詳細は %LOCALAPPDATA%\LauncherCatalog\Logs\latest.log を参照。角括弧内のトレース ID で検索してください。)</value></data>
 </root>

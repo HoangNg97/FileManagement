@@ -38,5 +38,57 @@
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.49.0" GeneratePathProperty="true" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- In-process local HTTP bridge (Kestrel) for the Chrome extension. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    Playwright ships a Node-based driver (.playwright\node\...\node.exe + package\cli.js) that must
+    exist as real files on disk. To keep WorkSync a single, freely movable EXE we compress the driver
+    into one zip at build time and embed it as a resource. At runtime the app self-extracts it once
+    into a per-version cache folder and points Playwright at it via PLAYWRIGHT_DRIVER_SEARCH_PATH (see
+    GeminiWebDriver.EnsureDriverLocated). The NuGet package carries node binaries for every OS
+    (~0.5 GB); we stage only the Windows node plus the JS package so the embedded zip stays small.
+  -->
+  <Target Name="EmbedPlaywrightDriver"
+          BeforeTargets="PrepareForBuild;BeforeCompile"
+          Condition="'$(PkgMicrosoft_Playwright)' != ''">
+    <PropertyGroup>
+      <PlaywrightStage>$(IntermediateOutputPath)pw-driver\</PlaywrightStage>
+      <PlaywrightDriverZip>$(IntermediateOutputPath)playwright-driver.zip</PlaywrightDriverZip>
+    </PropertyGroup>
+    <ItemGroup>
+      <PwWinNode Include="$(PkgMicrosoft_Playwright)\.playwright\node\win32_x64\**" />
+      <PwLicense Include="$(PkgMicrosoft_Playwright)\.playwright\node\LICENSE" />
+      <PwPackage Include="$(PkgMicrosoft_Playwright)\.playwright\package\**" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PwWinNode)"
+          DestinationFiles="@(PwWinNode->'$(PlaywrightStage)node\win32_x64\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          Condition="!Exists('$(PlaywrightDriverZip)')" />
+    <Copy SourceFiles="@(PwLicense)"
+          DestinationFiles="@(PwLicense->'$(PlaywrightStage)node\LICENSE')"
+          SkipUnchangedFiles="true"
+          Condition="!Exists('$(PlaywrightDriverZip)')" />
+    <Copy SourceFiles="@(PwPackage)"
+          DestinationFiles="@(PwPackage->'$(PlaywrightStage)package\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          Condition="!Exists('$(PlaywrightDriverZip)')" />
+    <ZipDirectory SourceDirectory="$(PlaywrightStage)"
+                  DestinationFile="$(PlaywrightDriverZip)"
+                  Overwrite="false"
+                  Condition="!Exists('$(PlaywrightDriverZip)')" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(PlaywrightDriverZip)">
+        <LogicalName>WorkSync.playwright-driver.zip</LogicalName>
+        <Visible>false</Visible>
+      </EmbeddedResource>
+    </ItemGroup>
+    <Message Importance="high" Text="Playwright: embedded driver zip as WorkSync.playwright-driver.zip" />
+  </Target>
 </Project>
