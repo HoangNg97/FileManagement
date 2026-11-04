@@ -47,4 +47,4 @@ Back to [INDEX.md](INDEX.md).
 ## Build/publish
 
 - Use the VS Code tasks (`build`, `run`, `publish win-x64`) or the equivalent commands in
-  [ARCHITECTURE.md](ARCHITECTURE.md#build--run). Single-EXE publish output: `dist/WorkSync-win-x64`.
+  [ARCHITECTURE.md](ARCHITECTURE.md#build--run). Publish output is a self-contained folder: `dist/WorkSync-win-x64` = launcher `WorkSync.exe` + `app/` (ship the whole folder).

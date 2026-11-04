@@ -16,16 +16,16 @@ This is the entry point for understanding the project **without reading the enti
 6. [CONVENTIONS.md](CONVENTIONS.md) — coding/localization conventions and the doc-sync rule.
 
 Partially built features:
-- [AI-BRIDGE.md](AI-BRIDGE.md) — local AI gateway for the Gmail Chrome extension (Gemini via browser automation). **All three stages built: HTTP contract + settings tab + live `GeminiWebDriver` (Playwright). Selectors target the live Gemini DOM and may need tuning.**
+- [AI-BRIDGE.md](AI-BRIDGE.md) - local AI gateway for the Gmail Chrome extension. **Backed by the GitHub Copilot SDK; users sign in with GitHub (device flow) and requests use their Copilot subscription.**
 
 ## One-paragraph summary
 
-WorkSync is a Windows desktop app (C# / WPF / .NET 8, MVVM, custom window chrome) with four
-feature tabs — **Catalog**, **Tasks**, **Note**, **History Management** — each backed by its own
-SQLite database under `%LOCALAPPDATA%\LauncherCatalog`. It runs single-instance, lives in the tray,
-supports a global quick-search hotkey, runtime language switching (English/Japanese), light/dark
-theming, automatic backups, optional [Everything](https://www.voidtools.com/) file search, and
-Gemini OAuth.
+WorkSync is a Windows desktop app (C# / WPF / .NET 8, MVVM, custom window chrome) with three
+feature tabs - **Catalog**, **Tasks**, **Note** - each backed by its own SQLite database under
+`%LOCALAPPDATA%\LauncherCatalog`, plus an **AI Bridge** settings tab. It runs single-instance, lives
+in the tray, supports a global quick-search hotkey, runtime language switching (English/Japanese),
+light/dark theming, automatic backups, and optional [Everything](https://www.voidtools.com/) file
+search.
 
 ## Solution / project
 

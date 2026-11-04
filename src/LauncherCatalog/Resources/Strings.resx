@@ -28,15 +28,9 @@
   <data name="Common.Folder" xml:space="preserve"><value>Folder</value></data>
   <data name="Common.Tags" xml:space="preserve"><value>Tags</value></data>
   <data name="Common.Note" xml:space="preserve"><value>Note</value></data>
-  <data name="Common.Language" xml:space="preserve"><value>Language</value></data>
   <data name="Common.FullPath" xml:space="preserve"><value>Full path</value></data>
   <data name="Common.Added" xml:space="preserve"><value>Added</value></data>
-  <data name="Common.Created" xml:space="preserve"><value>Created</value></data>
-  <data name="Common.Updated" xml:space="preserve"><value>Updated</value></data>
   <data name="Common.LastOpened" xml:space="preserve"><value>Last opened</value></data>
-  <data name="Common.LastViewed" xml:space="preserve"><value>Last viewed</value></data>
-  <data name="Common.Words" xml:space="preserve"><value>Words</value></data>
-  <data name="Common.Checklist" xml:space="preserve"><value>Checklist</value></data>
   <data name="Common.Never" xml:space="preserve"><value>Never</value></data>
   <data name="Common.NoTags" xml:space="preserve"><value>No tags</value></data>
   <data name="Common.NoContentYet" xml:space="preserve"><value>No content yet</value></data>
@@ -49,9 +43,7 @@
   <data name="Common.SearchEllipsis" xml:space="preserve"><value>Search...</value></data>
   <data name="Main.Tab.Catalog" xml:space="preserve"><value>Catalog</value></data>
   <data name="Main.Tab.Tasks" xml:space="preserve"><value>Tasks</value></data>
-  <data name="Main.Tab.HistoryManagement" xml:space="preserve"><value>History Management</value></data>
   <data name="Main.Tab.Note" xml:space="preserve"><value>Note</value></data>
-  <data name="Main.Tab.Issues" xml:space="preserve"><value>Issues</value></data>
   <data name="Main.Tab.AiBridge" xml:space="preserve"><value>AI Bridge</value></data>
   <data name="AiBridge.Title" xml:space="preserve"><value>AI Bridge</value></data>
   <data name="AiBridge.Subtitle" xml:space="preserve"><value>A local HTTP gateway that lets the Gmail Chrome extension run AI requests through WorkSync. It listens on loopback only and is guarded by a bearer token.</value></data>
@@ -72,91 +64,12 @@
   <data name="AiBridge.Token.Regenerate" xml:space="preserve"><value>Regenerate</value></data>
   <data name="AiBridge.Token.Show" xml:space="preserve"><value>Show</value></data>
   <data name="AiBridge.Token.Hide" xml:space="preserve"><value>Hide</value></data>
-  <data name="AiBridge.Gemini.Title" xml:space="preserve"><value>Gemini sign-in</value></data>
-  <data name="AiBridge.Gemini.Hint" xml:space="preserve"><value>The bridge answers requests by driving the Gemini website in a real browser. Sign in once; the session is remembered. A browser window opens for you to log in (handle any 2FA there).</value></data>
-  <data name="AiBridge.Gemini.Login" xml:space="preserve"><value>Log in to Gemini</value></data>
-  <data name="AiBridge.Gemini.Relogin" xml:space="preserve"><value>Re-open Gemini sign-in</value></data>
-  <data name="AiBridge.Gemini.SignedIn" xml:space="preserve"><value>Signed in to Gemini</value></data>
-  <data name="AiBridge.Gemini.SignedOut" xml:space="preserve"><value>Not signed in</value></data>
-  <data name="AiBridge.SignInRequired.Title" xml:space="preserve"><value>Gemini sign-in required</value></data>
-  <data name="AiBridge.SignInRequired.Message" xml:space="preserve"><value>WorkSync could not reach Gemini because you are signed out. Click here (or open WorkSync) and sign in again to keep AI requests working.</value></data>
-  <data name="Issues.Search.Placeholder" xml:space="preserve"><value>Search issue or message...</value></data>
-  <data name="Issues.NewIssue.Button" xml:space="preserve"><value>New Issue</value></data>
-  <data name="Issues.NewIssue.Title" xml:space="preserve"><value>New Issue</value></data>
-  <data name="Issues.NewIssue.Create" xml:space="preserve"><value>Create</value></data>
-  <data name="Issues.EditIssue.Title" xml:space="preserve"><value>Edit Issue</value></data>
-  <data name="Issues.Field.Title" xml:space="preserve"><value>Issue title</value></data>
-  <data name="Issues.Field.Note" xml:space="preserve"><value>Note (optional)</value></data>
-  <data name="Issues.Field.Author" xml:space="preserve"><value>Author</value></data>
-  <data name="Issues.Field.MessageDate" xml:space="preserve"><value>Message date</value></data>
-  <data name="Issues.Validation.TitleRequired" xml:space="preserve"><value>Issue title is required.</value></data>
-  <data name="Issues.Validation.EmptyMessage" xml:space="preserve"><value>Message cannot be empty.</value></data>
-  <data name="Issues.Add.Button" xml:space="preserve"><value>Add</value></data>
-  <data name="Issues.Add.Placeholder" xml:space="preserve"><value>Write a message...</value></data>
-  <data name="Issues.Add.AuthorPlaceholder" xml:space="preserve"><value>Person name...</value></data>
-  <data name="Issues.Action.Edit" xml:space="preserve"><value>Edit</value></data>
-  <data name="Issues.Action.Remove" xml:space="preserve"><value>Remove</value></data>
-  <data name="Issues.Action.Save" xml:space="preserve"><value>Save</value></data>
-  <data name="Issues.Edit.MenuItem" xml:space="preserve"><value>Edit issue</value></data>
-  <data name="Issues.Delete.MenuItem" xml:space="preserve"><value>Delete issue</value></data>
-  <data name="Issues.RemoveIssue.Title" xml:space="preserve"><value>Delete issue</value></data>
-  <data name="Issues.RemoveIssue.Confirm" xml:space="preserve"><value>Delete this issue and all of its messages? This action cannot be undone.</value></data>
-  <data name="Issues.Remove.Title" xml:space="preserve"><value>Remove message</value></data>
-  <data name="Issues.Remove.Confirm" xml:space="preserve"><value>Remove this message? This action cannot be undone.</value></data>
-  <data name="Issues.Empty.Title" xml:space="preserve"><value>No issues yet.</value></data>
-  <data name="Issues.Empty.Hint" xml:space="preserve"><value>Create your first issue to start storing conversation history.</value></data>
-  <data name="Issues.NoMessages.Title" xml:space="preserve"><value>No messages yet.</value></data>
-  <data name="Issues.NoMessages.Hint" xml:space="preserve"><value>Write a message below to add history for this issue.</value></data>
-  <data name="Issues.NoSelection" xml:space="preserve"><value>Select an issue to view its history.</value></data>
-  <data name="Issues.UntitledIssue" xml:space="preserve"><value>Untitled issue</value></data>
-  <data name="Issues.UnknownAuthor" xml:space="preserve"><value>Unknown</value></data>
-  <data name="Issues.NoMessagesPreview" xml:space="preserve"><value>No messages yet</value></data>
-  <data name="Issues.EditedMarker" xml:space="preserve"><value>edited</value></data>
-  <data name="Issues.Export.MenuItem" xml:space="preserve"><value>Export to Excel sheet</value></data>
-  <data name="Issues.Export.DefaultFileName" xml:space="preserve"><value>Issues</value></data>
-  <data name="Issues.Export.NoSelection" xml:space="preserve"><value>Select at least one issue to export.</value></data>
-  <data name="Issues.Export.Complete" xml:space="preserve"><value>Exported {0} issue(s) to Excel.</value></data>
-  <data name="Issues.Export.Failed" xml:space="preserve"><value>Export failed: {0}</value></data>
-  <data name="Issues.Import.MenuItem" xml:space="preserve"><value>Import conversation</value></data>
-  <data name="Issues.Import.Title" xml:space="preserve"><value>Import conversation</value></data>
-  <data name="Issues.Import.PromptLabel" xml:space="preserve"><value>Prompt for generating an importable JSON file</value></data>
-  <data name="Issues.Import.Prompt" xml:space="preserve"><value>Take our conversation above and turn it into a single JSON file that I can download. Output ONLY the JSON (no extra text, comments, or code fences), and provide it as a downloadable .json file.
-
-Use exactly this structure:
-{
-  "messages": [
-    { "author": "Name", "date": "2026-07-01T14:30:00", "content": "Message text" }
-  ]
-}
-
-Rules:
-- Include every message in the conversation, in the order they appear.
-- "messages" is an array.
-- "author" is the sender's name (for example, me or you).
-- "date" is ISO-8601 (yyyy-MM-ddTHH:mm:ss). If a message's time is unknown, omit the "date" field.
-- "content" is the full message text. Use \n for line breaks inside a message.</value></data>
-  <data name="Issues.Import.FileLabel" xml:space="preserve"><value>Selected file</value></data>
-  <data name="Issues.Import.NoFile" xml:space="preserve"><value>No selected file</value></data>
-  <data name="Issues.Import.Open" xml:space="preserve"><value>Open</value></data>
-  <data name="Issues.Import.Import" xml:space="preserve"><value>Import</value></data>
-  <data name="Issues.Import.Complete" xml:space="preserve"><value>Imported {0} message(s).</value></data>
-  <data name="Issues.Import.NoNew" xml:space="preserve"><value>No new messages to import (all were already present).</value></data>
-  <data name="Issues.Import.Failed" xml:space="preserve"><value>Import failed: {0}</value></data>
-  <data name="Time.JustNow" xml:space="preserve"><value>Just now</value></data>
-  <data name="Time.MinutesAgo" xml:space="preserve"><value>{0} min ago</value></data>
-  <data name="Time.HoursAgo" xml:space="preserve"><value>{0} hr ago</value></data>
-  <data name="Time.Yesterday" xml:space="preserve"><value>Yesterday</value></data>
-  <data name="Time.DaysAgo" xml:space="preserve"><value>{0} days ago</value></data>
   <data name="AiBridge.Message.PortApplied" xml:space="preserve"><value>Port updated.</value></data>
   <data name="AiBridge.Message.InvalidPort" xml:space="preserve"><value>Enter a port between 1 and 65535.</value></data>
   <data name="AiBridge.Message.TokenRegenerated" xml:space="preserve"><value>A new token was generated. The previous token no longer works.</value></data>
   <data name="AiBridge.Message.TokenCopied" xml:space="preserve"><value>Token copied to the clipboard.</value></data>
   <data name="AiBridge.Message.EndpointCopied" xml:space="preserve"><value>Endpoint URL copied to the clipboard.</value></data>
   <data name="AiBridge.Message.CopyFailed" xml:space="preserve"><value>Could not access the clipboard.</value></data>
-  <data name="AiBridge.Message.LoginPlanned" xml:space="preserve"><value>Gemini sign-in will be available in a future update.</value></data>
-  <data name="AiBridge.Message.LoginInProgress" xml:space="preserve"><value>Opening a browser for Gemini sign-in. Complete the login in that window…</value></data>
-  <data name="AiBridge.Message.LoginSucceeded" xml:space="preserve"><value>Signed in to Gemini. The bridge can now answer requests.</value></data>
-  <data name="AiBridge.Message.LoginNotDetected" xml:space="preserve"><value>Sign-in was not detected. Make sure you finished logging in, then try again.</value></data>
   <data name="Main.Action.AddApp" xml:space="preserve"><value>Add App</value></data>
   <data name="Main.Action.AddFolder" xml:space="preserve"><value>Add Folder</value></data>
   <data name="Main.Action.AddToCatalog" xml:space="preserve"><value>Add to catalog</value></data>
@@ -173,11 +86,8 @@ Rules:
   <data name="Main.Tooltip.SearchNotes" xml:space="preserve"><value>Search note title, content, or tags</value></data>
   <data name="Main.Tooltip.NoteTitle" xml:space="preserve"><value>Note title</value></data>
   <data name="Main.Tooltip.NoteTags" xml:space="preserve"><value>Comma-separated tags, for example work, ideas, urgent</value></data>
-  <data name="Main.Tooltip.NoteBody" xml:space="preserve"><value>Write your note here. http/https URLs become clickable automatically while you edit.</value></data>
   <data name="Main.QuickSearchTooltip" xml:space="preserve"><value>Quick search shortcut: {0}</value></data>
   <data name="Backup.RestoreLatest.Tooltip" xml:space="preserve"><value>Restore from backup</value></data>
-  <data name="Backup.RestoreLatest.Title" xml:space="preserve"><value>Restore backup</value></data>
-  <data name="Backup.RestoreLatest.Confirm" xml:space="preserve"><value>Restore the data from selected backup</value></data>
   <data name="Backup.RestoreLatest.NoBackup" xml:space="preserve"><value>No backup version was found.</value></data>
   <data name="Backup.RestoreLatest.Success" xml:space="preserve"><value>Restored data from backup {0}.</value></data>
   <data name="Backup.RestoreLatest.Failed" xml:space="preserve"><value>Could not restore the latest backup. {0}</value></data>
@@ -222,71 +132,6 @@ Rules:
   <data name="Main.Note.EditorTitle" xml:space="preserve"><value>Editor</value></data>
   <data name="Main.Note.ChooseTitle" xml:space="preserve"><value>Choose a note</value></data>
   <data name="Main.Note.ChooseMessage" xml:space="preserve"><value>Pick an existing note from the list or create a new one to start editing.</value></data>
-  <data name="Main.Note.PreviewTitle" xml:space="preserve"><value>Preview</value></data>
-  <data name="Main.Note.PreviewSubtitle" xml:space="preserve"><value>Read mode with simple checklist and heading support</value></data>
-  <data name="Main.Note.PreviewEmptyTitle" xml:space="preserve"><value>Preview will appear here</value></data>
-  <data name="Main.Note.PreviewEmptyMessage" xml:space="preserve"><value>Once a note is selected, this panel shows a simple read view plus note details.</value></data>
-  <data name="Main.Loading" xml:space="preserve"><value>Loading data</value></data>
-  <data name="History.Title" xml:space="preserve"><value>History Management</value></data>
-  <data name="History.File.Count" xml:space="preserve"><value>{0} history file(s)</value></data>
-  <data name="History.File.CreateTitle" xml:space="preserve"><value>Create History File</value></data>
-  <data name="History.File.DetailsTitle" xml:space="preserve"><value>History File Details</value></data>
-  <data name="History.File.EmptyTitle" xml:space="preserve"><value>No History Files yet</value></data>
-  <data name="History.File.EmptyMessage" xml:space="preserve"><value>Create a History File to begin tracking events.</value></data>
-  <data name="History.Action.CreateFile" xml:space="preserve"><value>Create History File</value></data>
-  <data name="History.Action.NewEvent" xml:space="preserve"><value>New Event</value></data>
-  <data name="History.Action.Export" xml:space="preserve"><value>Export</value></data>
-  <data name="History.Action.ExportMonth" xml:space="preserve"><value>Export Current View</value></data>
-  <data name="History.Action.ExportAll" xml:space="preserve"><value>Export All</value></data>
-  <data name="History.Tooltip.FileName" xml:space="preserve"><value>History File name</value></data>
-  <data name="History.Tooltip.FileTags" xml:space="preserve"><value>Comma-separated tags</value></data>
-  <data name="History.Tooltip.SearchFiles" xml:space="preserve"><value>Search History Files by name or tag</value></data>
-  <data name="History.Tooltip.SearchEvents" xml:space="preserve"><value>Search events inside the opened History File</value></data>
-  <data name="History.Tooltip.EventNote" xml:space="preserve"><value>Event note</value></data>
-  <data name="History.Empty.SelectFileTitle" xml:space="preserve"><value>Select a History File</value></data>
-  <data name="History.Empty.SelectFileMessage" xml:space="preserve"><value>Choose or create a History File to view its route-style history map.</value></data>
-  <data name="History.Month.All" xml:space="preserve"><value>All</value></data>
-  <data name="History.Event.Count" xml:space="preserve"><value>{0} event(s) in selected view</value></data>
-  <data name="History.Event.NewTitle" xml:space="preserve"><value>New Event</value></data>
-  <data name="History.Event.EditTitle" xml:space="preserve"><value>Edit Event</value></data>
-  <data name="History.Event.EmptyMonthTitle" xml:space="preserve"><value>No events in this view</value></data>
-  <data name="History.Event.EmptyMonthMessage" xml:space="preserve"><value>Only dates with events appear on the route map.</value></data>
-  <data name="History.Visualization.LoadingTitle" xml:space="preserve"><value>Drawing history map</value></data>
-  <data name="History.Visualization.LoadingMessage" xml:space="preserve"><value>Please wait while the route is prepared.</value></data>
-  <data name="History.Search.ResultsTitle" xml:space="preserve"><value>Event Search Results</value></data>
-  <data name="History.Message.LoadFailed" xml:space="preserve"><value>History data could not be loaded.</value></data>
-  <data name="History.Message.FileNameRequired" xml:space="preserve"><value>Please enter a History File name.</value></data>
-  <data name="History.Message.FileCreated" xml:space="preserve"><value>History File created.</value></data>
-  <data name="History.Message.FileSaved" xml:space="preserve"><value>History File saved.</value></data>
-  <data name="History.Message.FileDeleted" xml:space="preserve"><value>History File deleted.</value></data>
-  <data name="History.Message.FileDeleteTitle" xml:space="preserve"><value>Delete History File</value></data>
-  <data name="History.Message.FileDeleteConfirm" xml:space="preserve"><value>Delete "{0}" and all of its events?</value></data>
-  <data name="History.Message.FileFavoriteAdded" xml:space="preserve"><value>History File added to favorites.</value></data>
-  <data name="History.Message.FileFavoriteRemoved" xml:space="preserve"><value>History File removed from favorites.</value></data>
-  <data name="History.Dialog.CreateTitle" xml:space="preserve"><value>Create History File</value></data>
-  <data name="History.Dialog.CreateSubtitle" xml:space="preserve"><value>Name this managed history record and add optional tags.</value></data>
-  <data name="History.Dialog.EditTitle" xml:space="preserve"><value>Edit History File</value></data>
-  <data name="History.Dialog.EditSubtitle" xml:space="preserve"><value>Update the name and tags for this managed history record.</value></data>
-  <data name="History.Field.FileName" xml:space="preserve"><value>History File Name</value></data>
-  <data name="History.Field.EventDate" xml:space="preserve"><value>Event Date</value></data>
-  <data name="History.Placeholder.FileName" xml:space="preserve"><value>Enter history file name</value></data>
-  <data name="History.Placeholder.FileTags" xml:space="preserve"><value>Tags, for example project, release, audit</value></data>
-  <data name="History.Placeholder.SearchFiles" xml:space="preserve"><value>Search history files by name or tag</value></data>
-  <data name="History.Placeholder.SearchEvents" xml:space="preserve"><value>Search events in this history file</value></data>
-  <data name="History.Placeholder.EventNote" xml:space="preserve"><value>Write the event note here</value></data>
-  <data name="History.Message.FileOpened" xml:space="preserve"><value>Opened "{0}".</value></data>
-  <data name="History.Message.EventsLoadFailed" xml:space="preserve"><value>History events could not be loaded.</value></data>
-  <data name="History.Event.DialogSubtitle" xml:space="preserve"><value>Choose the event date and write the note.</value></data>
-  <data name="History.Message.EventDateRequired" xml:space="preserve"><value>Please choose an event date.</value></data>
-  <data name="History.Message.EventNoteRequired" xml:space="preserve"><value>Please enter an event note.</value></data>
-  <data name="History.Message.EventCreated" xml:space="preserve"><value>History event created.</value></data>
-  <data name="History.Message.EventSaved" xml:space="preserve"><value>History event saved.</value></data>
-  <data name="History.Message.EventDeleted" xml:space="preserve"><value>History event deleted.</value></data>
-  <data name="History.Message.EventDeleteTitle" xml:space="preserve"><value>Delete event</value></data>
-  <data name="History.Message.EventDeleteConfirm" xml:space="preserve"><value>Delete this history event?</value></data>
-  <data name="History.Message.NoEventsToExport" xml:space="preserve"><value>No events are available to export.</value></data>
-  <data name="History.Message.ExportComplete" xml:space="preserve"><value>History exported to Excel.</value></data>
-  <data name="History.Message.ExportFailed" xml:space="preserve"><value>Could not export history. {0}</value></data>
   <data name="CatalogFilter.All" xml:space="preserve"><value>All</value></data>
   <data name="CatalogFilter.Apps" xml:space="preserve"><value>Apps</value></data>
   <data name="CatalogFilter.Folders" xml:space="preserve"><value>Folders</value></data>
@@ -423,7 +268,6 @@ Rules:
   <data name="Settings.Window.Title" xml:space="preserve"><value>Settings</value></data>
   <data name="Settings.Category.General" xml:space="preserve"><value>General</value></data>
   <data name="Settings.Section.Appearance" xml:space="preserve"><value>Appearance</value></data>
-  <data name="Settings.Appearance.ThemeLabel" xml:space="preserve"><value>Theme</value></data>
   <data name="Settings.Appearance.ThemeHint" xml:space="preserve"><value>Choose light or dark mode. Changes apply immediately.</value></data>
   <data name="Settings.Appearance.DarkMode" xml:space="preserve"><value>Dark mode</value></data>
   <data name="Settings.Section.Language" xml:space="preserve"><value>Language</value></data>
@@ -461,21 +305,17 @@ Rules:
   <data name="Everything.SavedStatus.Everything" xml:space="preserve"><value>Everything</value></data>
   <data name="Language.English" xml:space="preserve"><value>English</value></data>
   <data name="Language.Japanese" xml:space="preserve"><value>Japanese</value></data>
-  <data name="Chat.Open.Tooltip" xml:space="preserve"><value>Ask Gemini about the current tab</value></data>
-  <data name="Chat.Header" xml:space="preserve"><value>Ask Gemini · {0}</value></data>
-  <data name="Chat.Subtitle" xml:space="preserve"><value>Answers use only the active tab's data.</value></data>
-  <data name="Chat.InputPlaceholder" xml:space="preserve"><value>Ask about your {0}…</value></data>
-  <data name="Chat.Send" xml:space="preserve"><value>Send</value></data>
-  <data name="Chat.NewConversation" xml:space="preserve"><value>New conversation</value></data>
-  <data name="Chat.Close" xml:space="preserve"><value>Close</value></data>
-  <data name="Chat.EmptyState" xml:space="preserve"><value>Start a conversation about your {0}. The data on this tab is attached to your first message.</value></data>
-  <data name="Chat.Thinking" xml:space="preserve"><value>Thinking…</value></data>
-  <data name="Chat.SendingContext" xml:space="preserve"><value>Sending data ({0}/{1})…</value></data>
-  <data name="Chat.EmptyReply" xml:space="preserve"><value>Gemini returned an empty answer.</value></data>
-  <data name="Chat.UnsupportedTab" xml:space="preserve"><value>Chat isn't available on this tab.</value></data>
-  <data name="Chat.Error.Disabled" xml:space="preserve"><value>AI Bridge is disabled. Enable it from the AI Bridge tab.</value></data>
-  <data name="Chat.Error.NotSignedIn" xml:space="preserve"><value>Sign in to Gemini from the AI Bridge tab to start chatting.</value></data>
-  <data name="Chat.Error.PortInUse" xml:space="preserve"><value>AI Bridge port is in use. Fix it from the AI Bridge tab.</value></data>
-  <data name="Chat.Error.Failed" xml:space="preserve"><value>Gemini could not answer: {0}
-(Details in %LOCALAPPDATA%\LauncherCatalog\Logs\latest.log — search for the trace id in [brackets].)</value></data>
+  <data name="AiBridge.Copilot.Title" xml:space="preserve"><value>GitHub Copilot account</value></data>
+  <data name="AiBridge.Copilot.Hint" xml:space="preserve"><value>AI requests run on your GitHub Copilot subscription. Sign in with GitHub in your browser; the sign-in is remembered.</value></data>
+  <data name="AiBridge.Copilot.SignedInAs" xml:space="preserve"><value>Signed in as {0}</value></data>
+  <data name="AiBridge.Copilot.SignedOut" xml:space="preserve"><value>Not signed in</value></data>
+  <data name="AiBridge.Copilot.SignIn" xml:space="preserve"><value>Sign in with GitHub</value></data>
+  <data name="AiBridge.Copilot.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="AiBridge.Copilot.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="AiBridge.Copilot.CodeHint" xml:space="preserve"><value>Enter this code on the GitHub page that opened in your browser (it is already copied to the clipboard):</value></data>
+  <data name="AiBridge.Copilot.Message.SignedIn" xml:space="preserve"><value>Signed in to GitHub Copilot as {0}.</value></data>
+  <data name="AiBridge.Copilot.Message.SignedOut" xml:space="preserve"><value>Signed out. You can also revoke WorkSync&apos;s access on GitHub under Settings &gt; Applications.</value></data>
+  <data name="AiBridge.Copilot.Message.Cancelled" xml:space="preserve"><value>Sign-in cancelled.</value></data>
+  <data name="AiBridge.Copilot.Message.Failed" xml:space="preserve"><value>Sign-in failed: {0}</value></data>
+  <data name="AiBridge.Copilot.Message.Connecting" xml:space="preserve"><value>Contacting GitHub...</value></data>
 </root>

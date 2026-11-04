@@ -32,20 +32,13 @@
     {
       "label": "publish win-x64",
       "type": "process",
-      "command": "dotnet",
+      "command": "powershell",
       "args": [
-        "publish",
-        "src/LauncherCatalog/LauncherCatalog.csproj",
-        "-c",
-        "Release",
-        "-r",
-        "win-x64",
-        "--self-contained",
-        "true",
-        "-o",
-        "dist/LauncherCatalog-win-x64",
-        "-p:PublishSingleFile=true",
-        "-p:IncludeNativeLibrariesForSelfExtract=true"
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/publish-windows.ps1"
       ],
       "group": "build",
       "problemMatcher": "$msCompile"

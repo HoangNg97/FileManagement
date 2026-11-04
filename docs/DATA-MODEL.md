@@ -35,7 +35,8 @@ Model: [../src/LauncherCatalog/Models/CatalogEntry.cs](../src/LauncherCatalog/Mo
 - `settings` table (key/value) stores app-level UI settings: `theme`, `quick_search_hotkey`,
   `language_code`, `ai_bridge_enabled` (AI Bridge on/off, default `true`), `ai_bridge_token`
   (AI Bridge Bearer token, **DPAPI-encrypted**, `DPAPI:` prefix), `ai_bridge_port` (AI Bridge
-  loopback port, default `48717`). `meta` table tracks migration flags (e.g.
+  loopback port, default `48717`), `ai_copilot_token` (GitHub OAuth token for Copilot,
+  **DPAPI-encrypted**), `ai_copilot_login` (signed-in GitHub login). `meta` table tracks migration flags (e.g.
   `json_migration_completed`).
 
 ### Migrations
@@ -96,84 +97,6 @@ Related: `NotePreviewLine` (rendered preview lines), `NoteFilterMode` enum.
 | `last_viewed_at` | TEXT NULL | drives Recent sorting |
 
 Indexed on favorite, updated_at, last_viewed_at, title.
-
----
-
-## History Management — `history.db`
-
-Repository: [../src/LauncherCatalog/Services/HistoryRepository.cs](../src/LauncherCatalog/Services/HistoryRepository.cs)
-Models: `HistoryFileItem`, `HistoryEventItem`, `HistoryMonthOption`.
-
-A *history file* is a database record (a logical grouping), **not** a real file on disk.
-
-### `history_files`
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | TEXT PK | GUID |
-| `name` | TEXT | |
-| `created_date` | TEXT | |
-| `tags_json` | TEXT | JSON string array |
-| `is_favorite` | INTEGER | favorites sort to top |
-| `created_at`, `updated_at` | TEXT | |
-
-### `history_events`
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | TEXT PK | GUID |
-| `history_file_id` | TEXT | FK → `history_files(id)` `ON DELETE CASCADE` |
-| `event_date` | TEXT | multiple events per date allowed |
-| `note` | TEXT | free text |
-| `created_at`, `updated_at` | TEXT | |
-
-Index `idx_history_events_file_date` on (`history_file_id`, `event_date`).
-
-Events render as a curved route/timeline (`Views/HistoryRouteMap.cs`). Export to `.xlsx` via
-`HistoryExcelExportService` (selected month/year view, or all events).
-
----
-
-## Issues — `issue.db`
-
-Repository: [../src/LauncherCatalog/Services/IssueRepository.cs](../src/LauncherCatalog/Services/IssueRepository.cs)
-Models: [../src/LauncherCatalog/Models/Issue.cs](../src/LauncherCatalog/Models/Issue.cs),
-[../src/LauncherCatalog/Models/IssueMessage.cs](../src/LauncherCatalog/Models/IssueMessage.cs).
-Helper: `RelativeTimeFormatter` (localized "time ago" for the issue list).
-
-A local, Jira-comment-style history store: each *issue* groups a thread of *messages*.
-
-### `issues`
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | TEXT PK | GUID |
-| `title` | TEXT | |
-| `note` | TEXT | free-text note that stays with the issue (edited via the issue dialog) |
-| `created_at` | TEXT | |
-| `updated_at` | TEXT | latest activity; drives list sort (newest first) |
-
-### `messages`
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | TEXT PK | GUID |
-| `issue_id` | TEXT | FK → `issues(id)` `ON DELETE CASCADE` |
-| `created_by` | TEXT | author |
-| `created_at` | TEXT | drives newest→oldest thread order (newest on top) |
-| `content` | TEXT | message text |
-| `modified_at` | TEXT NULL | set when edited |
-| `is_edited` | INTEGER | edited marker |
-
-Indexes: `idx_issues_updated_at`, `idx_messages_issue_id`, `idx_messages_created_at`. Reads fail
-soft (empty list) on a locked/corrupt file. Legacy databases (which used a mandatory issue-level
-`created_by` column and no `note`) are migrated on load by rebuilding the `issues` table.
-
-Issues support create, **edit** (title + note), and **delete** (cascades to messages). Export to
-`.xlsx` via `IssueExcelExportService` (one or many selected issues, vertical Jira-style layout,
-side-by-side blocks divided by a thick border, frozen top rows). Import a conversation from a JSON
-file via `IssueConversationImportService` (`{ "messages": [...] }` or a bare array; merges into the
-selected issue, skips exact duplicates, then re-sorts newest-first by date).
 
 ---
 

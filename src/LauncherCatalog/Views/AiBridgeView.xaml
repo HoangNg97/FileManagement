@@ -54,13 +54,6 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
-        <Style x:Key="AiBridgeSignInStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource StrongTextBrush}" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-
         <Style x:Key="AiBridgeMessageStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource SelectableTextBoxStyle}">
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
@@ -88,6 +81,83 @@
                     <TextBox Text="{loc:Loc AiBridge.Subtitle}"
                              Style="{StaticResource AiBridgeSubtitleStyle}" />
                 </StackPanel>
+
+                <!-- GitHub Copilot account (web sign-in) -->
+                <Border Style="{StaticResource AiBridgeCardStyle}">
+                    <StackPanel>
+                        <TextBox Text="{loc:Loc AiBridge.Copilot.Title}"
+                                 Style="{StaticResource AiBridgeCardTitleStyle}" />
+                        <TextBox Text="{loc:Loc AiBridge.Copilot.Hint}"
+                                 Style="{StaticResource AiBridgeCardHintStyle}" />
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="11" Height="11" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="{x:Type Ellipse}">
+                                            <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSignedIn}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBox Text="{Binding AccountStatusText, Mode=OneWay}"
+                                         Margin="10,0,0,0"
+                                         Style="{StaticResource AiBridgeStatusStyle}" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Content="{Binding AccountButtonText}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding AccountCommand}" />
+                        </Grid>
+
+                        <TextBox Text="{Binding AccountMessage, Mode=OneWay}"
+                                 Margin="0,10,0,0"
+                                 TextWrapping="Wrap"
+                                 Style="{StaticResource AiBridgeCardHintStyle}"
+                                 Visibility="{Binding AccountMessage, Converter={StaticResource HasTextToVisibilityConverter}}" />
+
+                        <!-- Shown only while a device-flow sign-in is waiting for the user. -->
+                        <Border Margin="0,14,0,0"
+                                Background="{DynamicResource ControlMutedBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="14,12"
+                                Visibility="{Binding DeviceCode, Converter={StaticResource HasTextToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBox Text="{loc:Loc AiBridge.Copilot.CodeHint}"
+                                             TextWrapping="Wrap"
+                                             Style="{StaticResource AiBridgeCardHintStyle}" />
+                                    <TextBox Text="{Binding DeviceCode, Mode=OneWay}"
+                                             Margin="0,6,0,0"
+                                             FontFamily="Consolas"
+                                             FontSize="22"
+                                             FontWeight="Bold"
+                                             Foreground="{DynamicResource StrongTextBrush}"
+                                             Style="{StaticResource SelectableTextBoxStyle}" />
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Content="{loc:Loc AiBridge.Copilot.Cancel}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding CancelSignInCommand}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
 
                 <!-- Status banner -->
                 <Border Style="{StaticResource AiBridgeCardStyle}"
@@ -228,40 +298,6 @@
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     Command="{Binding RegenerateTokenCommand}" />
                         </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- Gemini sign-in -->
-                <Border Style="{StaticResource AiBridgeCardStyle}">
-                    <StackPanel>
-                        <TextBox Text="{loc:Loc AiBridge.Gemini.Title}"
-                                 Style="{StaticResource AiBridgeCardTitleStyle}" />
-                        <TextBox Text="{loc:Loc AiBridge.Gemini.Hint}"
-                                 Style="{StaticResource AiBridgeCardHintStyle}" />
-
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0" VerticalAlignment="Center">
-                            <Ellipse Width="11" Height="11" VerticalAlignment="Center">
-                                <Ellipse.Style>
-                                    <Style TargetType="{x:Type Ellipse}">
-                                        <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSignedIn}" Value="True">
-                                                <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Ellipse.Style>
-                            </Ellipse>
-                            <TextBox Text="{Binding SignInStatusText, Mode=OneWay}"
-                                     Margin="10,0,0,0"
-                                     Style="{StaticResource AiBridgeSignInStyle}" />
-                        </StackPanel>
-
-                        <Button Content="{Binding LoginButtonText}"
-                                HorizontalAlignment="Left"
-                                Margin="0,14,0,0"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Command="{Binding LoginCommand}" />
                     </StackPanel>
                 </Border>
 

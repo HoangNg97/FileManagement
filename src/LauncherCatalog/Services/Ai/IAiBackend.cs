@@ -22,13 +22,12 @@ public sealed class AiBackendException : Exception
 }
 
 /// <summary>
-/// Abstraction over whatever actually produces analysis and drafts. Stage 1 ships a
-/// <see cref="StubAiBackend"/>; a later stage swaps in a Playwright-driven Gemini backend behind
-/// this same interface without touching the HTTP server or the request queue.
+/// Abstraction over whatever actually produces analysis and drafts. The live implementation is
+/// <see cref="CopilotBackend"/> (GitHub Copilot SDK).
 /// </summary>
 public interface IAiBackend
 {
-    /// <summary>Provider identifiers advertised on <c>/api/health</c> (e.g. <c>gemini</c>).</summary>
+    /// <summary>Provider identifiers advertised on <c>/api/health</c> (e.g. <c>github-copilot</c>).</summary>
     IReadOnlyList<string> Providers { get; }
 
     /// <summary>

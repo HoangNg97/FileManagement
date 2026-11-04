@@ -9,7 +9,7 @@ Back to [INDEX.md](INDEX.md).
 - **Pattern:** MVVM (ViewModels expose `ICommand` + observable state; Views are XAML).
 - **Persistence:** `Microsoft.Data.Sqlite` (one `.db` file per feature).
 - **UI toolkit:** MaterialDesignThemes 5.3.1.
-- **Auth:** `Google.Apis.Auth` (Gemini OAuth).
+- **AI provider:** `GitHub.Copilot.SDK` (bundles the Copilot runtime under `runtimes\win-x64\native`, which must ship next to the EXE).
 - **Local HTTP bridge:** ASP.NET Core / Kestrel (`Microsoft.AspNetCore.App` framework reference), self-hosted in-process for the Chrome extension.
 - **Window chrome:** custom (`WindowStyle=None`) with an in-app title bar.
 
@@ -18,7 +18,7 @@ Back to [INDEX.md](INDEX.md).
 | Layer | Folder | Responsibility |
 |-------|--------|----------------|
 | Models | `Models/` | Plain data types + enums. Some implement `INotifyPropertyChanged`. |
-| Services | `Services/` | SQLite repositories, search, launching, theming, localization, backups, hotkeys, reminders, auth. No UI. |
+| Services | `Services/` | SQLite repositories, search, launching, theming, localization, backups, hotkeys, reminders, AI bridge. No UI. |
 | ViewModels | `ViewModels/` | MVVM state + commands. Bridge between Services and Views. |
 | Views | `Views/` | Dialog windows + feature views (XAML + code-behind). |
 | Converters | `Converters/` | XAML `IValueConverter` presentation helpers. |
@@ -35,22 +35,9 @@ container**; dependencies are wired manually in `MainWindow`.
 | Catalog | `MainViewModel` | `EntryRepository`, `EverythingSearchService`, `LauncherService` | `catalog.db` |
 | Tasks | `MainViewModel` | `TaskRepository`, `TaskReminderService` | `task.db` |
 | Note | `MainViewModel` | `NoteRepository` | `note.db` |
-| History Management | `HistoryManagementViewModel` | `HistoryRepository`, `HistoryExcelExportService` | `history.db` |
+| AI Bridge | `AiBridgeViewModel` | `AiBridgeManager`, `AiBridgeServer` | settings in `catalog.db` |
 
-`MainViewModel` drives three tabs (Catalog, Tasks, Note). History has its own ViewModel.
-
-### In-app chat overlay
-
-A title-bar chat button opens `Views/ChatPanel` (`ChatViewModel`) as a bubble-style overlay above
-the tab content. The panel reads which tab is currently selected in `MainTabs`, serializes that
-tab's DB rows through `ChatContextExporter` as **inline JSON**, and sends the question through
-`AiBridgeManager.ChatAsync` — the same live driver used by the Gmail bridge. When the JSON is
-short it rides along with the question in a single Gemini turn; when it's too large the panel
-splits it at line boundaries and sends the parts across multiple sequential turns in the same
-Gemini conversation (intermediate turns acknowledge with "OK", the final turn carries the actual
-question). The chat and the Gmail bridge share **one** Gemini browser tab; the driver tracks
-which slot last drove the tab and clicks Gemini's **New chat** on every slot switch so their
-conversations stay separate. Chat history in the panel is in-memory only.
+`MainViewModel` drives three tabs (Catalog, Tasks, Note). AI Bridge has its own ViewModel.
 
 ## Application lifecycle
 
@@ -70,20 +57,13 @@ Defined in [../src/LauncherCatalog/App.xaml.cs](../src/LauncherCatalog/App.xaml.
 - **Global quick-search hotkey** via `GlobalHotkeyService` opens `QuickSearchWindow` even when the
   main window is visible.
 - **Automatic backups** via `DatabaseBackupService`: when the last backup is >2 days old, writes one
-  timestamped folder under `Backups/Versions` containing all four DBs; keeps newest 10; writes
+  timestamped folder under `Backups/Versions` containing all three DBs; keeps newest 10; writes
   `Backups/RESTORE.txt`.
 - **Startup registration** via `StartupLaunchService`: adds the app to the current-user Windows
   `Run` key so it launches at sign-in.
 - **Theming** via `ThemeService`: light/dark, toggled from the title bar, persisted in settings.
 - **Localization** via `LocalizationService`: runtime culture switch; raises `CultureChanged` so
   ViewModels refresh localized strings without restart.
-- **In-app chat (Ask Gemini)**: a title-bar chat button opens the `ChatPanel` overlay, which sends
-  the currently-focused tab's data (Catalog/Tasks/Note/History/Issues) as **inline JSON** in the
-  Gemini prompt through `AiBridgeManager.ChatAsync`, chunking across multiple sequential turns
-  when the JSON is too large for a single turn. Reuses the same Gemini browser tab as the Gmail
-  bridge; the driver clicks Gemini's **New chat** whenever the active slot switches (bridge ↔ chat)
-  so their conversations stay separate. Errors (bridge disabled, port in use, not signed in)
-  surface as an inline banner above the input; the chat history itself is in-memory only.
 - **Local AI Bridge** via `AiBridgeServer` (ASP.NET Core / Kestrel), lifecycle owned by
   `AiBridgeManager` (singleton): starts/stops with the app and with the enable toggle. Bound to
   **loopback only** on port **48717** (configurable via `settings.ai_bridge_port`). CORS is
@@ -91,17 +71,16 @@ Defined in [../src/LauncherCatalog/App.xaml.cs](../src/LauncherCatalog/App.xaml.
   (`settings.ai_bridge_token`, DPAPI-encrypted) is required on `POST /api/analyze` and
   `POST /api/draft`; `GET /api/health` is open for discovery. Requests run through a strict **FIFO
   queue** (one at a time, 60 s budget each) and delegate to a swappable `IAiBackend`. A dedicated
-  **"AI Bridge" tab** manages enable/port/token and Gemini sign-in. The live backend is
-  **`GeminiWebDriver`** — Playwright automation of the Gemini Web UI (non-headless, persistent
-  profile, installed Edge/Chrome channel preferred), returning **503** until the user signs in.** See
-  [AI-BRIDGE.md](AI-BRIDGE.md) for the full design and stage status.
+  **"AI Bridge" tab** manages GitHub Copilot sign-in (top card) plus enable/port/token. The backend is
+  `CopilotBackend` (GitHub Copilot SDK, signed-in user's subscription); work endpoints return **503**
+  until a user signs in. See [AI-BRIDGE.md](AI-BRIDGE.md) for the full design.
 
 ## Storage locations
 
 All under `%LOCALAPPDATA%\LauncherCatalog` (legacy folder name kept for backward compatibility):
 
 ```text
-catalog.db   task.db   note.db   history.db
+catalog.db   task.db   note.db
 settings (table inside catalog.db)
 Backups/Versions/...    Backups/RESTORE.txt
 Logs/  (Logs/latest.log)
@@ -115,7 +94,7 @@ See [DATA-MODEL.md](DATA-MODEL.md) for schemas and migrations.
 |--------|---------|
 | Build | `dotnet build .\FileLauncherCatalog.sln -c Debug` |
 | Run | `dotnet run --project .\src\LauncherCatalog\LauncherCatalog.csproj` |
-| Publish (single EXE) | `dotnet publish .\src\LauncherCatalog\LauncherCatalog.csproj -c Release -r win-x64 --self-contained true -o .\dist\WorkSync-win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true` |
+| Publish (self-contained folder) | `.\scripts\publish-windows.ps1` (cleans, `dotnet publish ... -c Release -r win-x64 --self-contained true -o .\dist\WorkSync-win-x64\app`, then compiles the root launcher `WorkSync.exe` from `scripts\WorkSyncLauncher.cs`) |
 
 VS Code tasks `build`, `run`, and `publish win-x64` mirror the commands above.
 
@@ -123,4 +102,3 @@ VS Code tasks `build`, `run`, and `publish win-x64` mirror the commands above.
 
 - `Everything.exe` + `Everything.lng` copied to output (`Everything/Runtime`).
 - `Everything64.dll` **embedded** as `LauncherCatalog.Embedded.Everything64.dll`.
-- `client_secret.json` **embedded** into the assembly (single-EXE friendly Gemini auth).

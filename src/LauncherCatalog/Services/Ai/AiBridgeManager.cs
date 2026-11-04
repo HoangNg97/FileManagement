@@ -41,26 +41,17 @@ public sealed class AiBridgeManager
 
     private readonly EntryRepository _settings = new();
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly GeminiWebDriver _backend;
+    private readonly CopilotBackend _backend = new();
     private AiBridgeServer? _server;
     private bool _initialized;
     private string _token = string.Empty;
 
     private AiBridgeManager()
     {
-        _backend = new GeminiWebDriver();
-        _backend.StateChanged += (_, _) => RaiseStateChanged();
-        _backend.SignInRequired += (_, e) => SignInRequired?.Invoke(this, e);
     }
 
     /// <summary>Raised after any state change (status, port, token, enabled) on a worker thread.</summary>
     public event EventHandler? StateChanged;
-
-    /// <summary>
-    /// Raised when a request was rejected because the Gemini session was silently signed out, so the
-    /// shell can notify the user that they need to sign in again. Fires on a worker thread.
-    /// </summary>
-    public event EventHandler? SignInRequired;
 
     public bool IsEnabled { get; private set; } = true;
     public int Port { get; private set; } = AiBridgeServer.DefaultPort;
@@ -68,14 +59,11 @@ public sealed class AiBridgeManager
     public AiBridgeStatus Status { get; private set; } = AiBridgeStatus.Disabled;
     public string? LastError { get; private set; }
 
-    /// <summary>Whether the Gemini backend has a confirmed signed-in session.</summary>
+    /// <summary>Whether a GitHub account is signed in for Copilot.</summary>
     public bool IsSignedIn => _backend.IsReady;
 
-    /// <summary>Which browser the Gemini driver launched (<c>msedge</c>/<c>chrome</c>/<c>chromium</c>), if any.</summary>
-    public string? BackendChannel => _backend.LaunchedChannel;
-
-    /// <summary>UTC time of the most recent Gemini request, restored from settings; null if none.</summary>
-    public DateTime? LastGeminiRequestUtc => _backend.LastRequestUtc;
+    /// <summary>GitHub login of the signed-in account, if any.</summary>
+    public string? SignedInLogin => _backend.Login;
 
     /// <summary>The loopback URL the extension targets.</summary>
     public string EndpointUrl => $"http://127.0.0.1:{Port}";
@@ -93,10 +81,7 @@ public sealed class AiBridgeManager
 
             _initialized = true;
             await LoadSettingsAsync().ConfigureAwait(false);
-
-            // Restore the persisted Gemini chat-reuse state (last-request time and prompt count) so
-            // the reuse rules are authoritative from startup, not just after the first request.
-            await _backend.EnsureStateLoadedAsync().ConfigureAwait(false);
+            await _backend.LoadAsync().ConfigureAwait(false);
 
             if (IsEnabled)
             {
@@ -198,45 +183,18 @@ public sealed class AiBridgeManager
         RaiseStateChanged();
     }
 
-    /// <summary>
-    /// Opens the visible browser so the user can sign in to Gemini. Serialized with request handling
-    /// inside the driver; raises <see cref="StateChanged"/> when the signed-in state updates.
-    /// </summary>
-    public async Task LoginAsync(CancellationToken cancellationToken = default)
+    /// <summary>Signs in to GitHub Copilot on the web (device flow); <paramref name="showCode"/> receives the code to enter.</summary>
+    public async Task SignInAsync(Action<string> showCode, CancellationToken cancellationToken)
     {
-        await _backend.LoginAsync(cancellationToken).ConfigureAwait(false);
+        await _backend.SignInAsync(showCode, cancellationToken).ConfigureAwait(false);
         RaiseStateChanged();
     }
 
-    /// <summary>
-    /// Free-form chat used by the in-app chat panel (not the Gmail bridge). Sends
-    /// <paramref name="prompt"/> to Gemini in a chat-scoped conversation and returns the plain-text
-    /// answer. Context data is inlined into <paramref name="prompt"/> by the caller (the chat panel
-    /// splits large payloads into multiple sequential calls). Throws <see cref="AiBackendException"/>
-    /// if the bridge is disabled, the port is unavailable, or Gemini is not signed in — callers
-    /// surface these as inline errors.
-    /// </summary>
-    public async Task<string> ChatAsync(string prompt, CancellationToken cancellationToken)
+    public async Task SignOutAsync()
     {
-        if (!IsEnabled)
-        {
-            throw new AiBackendException("bridge_disabled");
-        }
-        if (Status == AiBridgeStatus.PortInUse)
-        {
-            throw new AiBackendException("port_in_use");
-        }
-        if (!_backend.IsReady)
-        {
-            throw new AiBackendException("not_signed_in");
-        }
-
-        return await _backend.ChatAsync(prompt, cancellationToken).ConfigureAwait(false);
+        await _backend.SignOutAsync().ConfigureAwait(false);
+        RaiseStateChanged();
     }
-
-    /// <summary>Resets the in-app chat slot so the next <see cref="ChatAsync"/> starts a fresh Gemini conversation.</summary>
-    public Task ResetChatAsync(CancellationToken cancellationToken = default)
-        => _backend.ResetChatAsync(cancellationToken);
 
     /// <summary>Stops the listener on app shutdown.</summary>
     public async Task ShutdownAsync()

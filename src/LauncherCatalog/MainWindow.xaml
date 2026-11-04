@@ -40,14 +40,6 @@
             <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
 
-        <Style x:Key="TitleBarLanguageButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource SecondaryButtonStyle}">
-            <Setter Property="Width" Value="76" />
-            <Setter Property="Height" Value="34" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-
         <!-- Clean template for the caption/title-bar icon buttons so glyphs are always centered
              and never clipped by the default WPF button chrome. -->
         <Style x:Key="TitleBarIconButtonStyle" TargetType="{x:Type Button}">
@@ -79,44 +71,6 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="ButtonBorder" Property="Background" Value="#22000000" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="AskGeminiTitleButtonStyle" TargetType="{x:Type Button}">
-            <Setter Property="Height" Value="34" />
-            <Setter Property="MinWidth" Value="124" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="Background" Value="#FFFFFFFF" />
-            <Setter Property="Foreground" Value="#FF111111" />
-            <Setter Property="BorderBrush" Value="#FFD6D6D6" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Button}">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FFF4F4F4" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#FFEAEAEA" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.5" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -558,13 +512,6 @@
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
-                    <Button x:Name="ChatButton"
-                            Style="{StaticResource TitleBarIconButtonStyle}"
-                            FontSize="15"
-                            Content="&#xE8BD;"
-                            Click="Chat_Click"
-                            ToolTip="{loc:Loc Chat.Open.Tooltip}"
-                            shell:WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource TitleBarIconButtonStyle}"
                             FontSize="15"
                             Content="&#xE713;"
@@ -589,8 +536,7 @@
         </Border>
 
         <Grid Grid.Row="1" Margin="24">
-        <TabControl x:Name="MainTabs"
-                    Style="{StaticResource MainTabControlStyle}">
+        <TabControl Style="{StaticResource MainTabControlStyle}">
             <TabControl.Resources>
                 <Style TargetType="{x:Type TabItem}" BasedOn="{StaticResource MainTabItemStyle}" />
             </TabControl.Resources>
@@ -1894,16 +1840,7 @@
 
                 </Grid>
             </TabItem>
-            <TabItem Header="{loc:Loc Main.Tab.HistoryManagement}"
-                     MinWidth="178">
-                <views:HistoryManagementView Margin="0,14,0,0" />
-            </TabItem>
-            <TabItem Header="{loc:Loc Main.Tab.Issues}"
-                     MinWidth="120">
-                <views:IssuesView Margin="0,14,0,0" />
-            </TabItem>
-            <TabItem x:Name="AiBridgeTab"
-                     Header="{loc:Loc Main.Tab.AiBridge}"
+            <TabItem Header="{loc:Loc Main.Tab.AiBridge}"
                      MinWidth="120">
                 <views:AiBridgeView Margin="0,14,0,0" />
             </TabItem>
@@ -1955,14 +1892,5 @@
                            Margin="0,18,0,0" />
             </StackPanel>
         </Grid>
-
-        <!-- In-app Gemini chat panel (overlay). Anchored to the top-right just under the chat
-             button in the title bar; MainWindow toggles Visibility via ShowAnimated/HideAnimated. -->
-        <views:ChatPanel x:Name="ChatPanel"
-                         Grid.RowSpan="2"
-                         Panel.ZIndex="30"
-                         HorizontalAlignment="Right"
-                         VerticalAlignment="Top"
-                         Margin="0,50,20,20" />
     </Grid>
 </Window>
